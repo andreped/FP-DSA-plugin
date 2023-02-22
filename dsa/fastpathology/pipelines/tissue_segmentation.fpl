@@ -4,7 +4,7 @@ PipelineOutputData segmentation segmentation 0
 Attribute classes "Background;Tissue"
 
 ProcessObject WSI WholeSlideImageImporter
-Attribute filename @@wsi@@
+Attribute filename @@input@@
 
 ProcessObject segmentation TissueSegmentation
 Input 0 WSI
