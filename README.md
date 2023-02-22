@@ -2,8 +2,37 @@
 
 ## Requirements
 
+DSA needs to be installed. Follow the instructions [here](https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/dsa) on how to do so.
+
+In addition, docker need to be setup such that it works with pyFAST. For that I strongly recommend installing Docker desktop. You might also need to install the nvidia docker to make it work properly:
+
+```
+sudo apt update
+sudo apt-get install -y nvidia-docker2
+sudo systemctl restart docker
+```
+
 
 ## Installation
+
+Clone the repository:
+```
+git clone https://github.com/andreped/FP-dsa-plugin.git
+```
+
+Build the docker image for the core fastpathology:
+```
+cd dsa/fastpathology/
+docker build -t fastpathology .
+```
+
+Build the docker image for the plugin:
+```
+cd ../
+docker build -t fastpathology-dsa-plugin .
+```
+
+To add the plugin to DSA, choose `Upload new Task` under Slicer CLI Web Tasks in the DSA web UI. The plugin can then be used from the Analysis Page.
 
 
 ## Acknowledgements
