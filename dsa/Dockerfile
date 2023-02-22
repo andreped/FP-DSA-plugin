@@ -64,6 +64,7 @@ ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 # test entrypoint
 RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
+#RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help  # <- cannot run this inside here as there is no X11 (!)
 
 # define docker entrypoint
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]

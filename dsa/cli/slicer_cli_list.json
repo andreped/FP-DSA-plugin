@@ -3,6 +3,9 @@
         "type": "python"
     },
     "FASTNucleiSegmentation": {
-        "type": "python"
+        "type": "python",
+        "docker-params": {
+            "gpus": "all"
+          }
     }
 }

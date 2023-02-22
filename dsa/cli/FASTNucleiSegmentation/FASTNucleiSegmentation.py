@@ -16,6 +16,8 @@ from histomicstk.cli.utils import CLIArgumentParser
 
 import fast  # <- @TODO: Does this work within the plugin? Will likely fail
 
+print("FAST import worked!")
+
 
 logging.basicConfig(level=logging.CRITICAL)
 
