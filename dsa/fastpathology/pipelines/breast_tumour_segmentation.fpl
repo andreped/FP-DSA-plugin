@@ -19,7 +19,7 @@ Input 0 WSI 0
 Input 1 tissueSeg 0
 
 ProcessObject network NeuralNetwork
-Attribute model @@model@@/breast-tumour-segmentation-model/pw_tumour_mobilenetv2_model.onnx
+Attribute model @@model@@"/breast-tumour-segmentation-model/pw_tumour_mobilenetv2_model.onnx"
 Attribute scale-factor 0.003921568627451
 Input 0 patch 0
 
@@ -42,7 +42,7 @@ Input 0 lowRes 0
 
 ProcessObject refinement SegmentationNetwork
 Attribute inference-engine OpenVINO
-Attribute model @@model@@/breast-tumour-segmentation-model/unet_tumour_refinement_model_fix-opset9.onnx
+Attribute model @@model@@"/breast-tumour-segmentation-model/unet_tumour_refinement_model_fix-opset9.onnx"
 Input 0 scale 0
 Input 1 tensorToImage 0
 

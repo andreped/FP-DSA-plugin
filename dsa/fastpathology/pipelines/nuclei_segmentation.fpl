@@ -20,7 +20,7 @@ Input 1 tissueSeg 0
 
 ProcessObject network SegmentationNetwork
 Attribute scale-factor 0.003921568627451
-Attribute model @@model@@/tissue-segmentation-model/high_res_nuclei_unet.onnx
+Attribute model @@model@@"/tissue-segmentation-model/high_res_nuclei_unet.onnx"
 Input 0 patch 0
 
 ProcessObject stitcher PatchStitcher
