@@ -14,9 +14,8 @@ import histomicstk.utils as htk_utils
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
 
-import fast  # <- @TODO: Does this work within the plugin? Will likely fail
-
-print("FAST import worked!")
+#import fast  # <- @TODO: Does this work within the plugin? Will likely fail
+#print("FAST import worked!")
 
 
 logging.basicConfig(level=logging.CRITICAL)
@@ -83,6 +82,10 @@ def detect_tile_nuclei(slide_path, tile_position, args, it_kwargs,
 
 def main(args):
     import dask
+
+    print("trying to import FAST...\n")
+    import fast  # <- @TODO: Does this work within the plugin? Will likely fail
+    print("FAST import worked!")
 
     total_start_time = time.time()
 

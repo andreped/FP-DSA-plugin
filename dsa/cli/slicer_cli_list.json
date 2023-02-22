@@ -5,7 +5,7 @@
     "FASTNucleiSegmentation": {
         "type": "python",
         "docker-params": {
-            "gpus": "all"
+            "ipc_mode": "host"
           }
     }
 }

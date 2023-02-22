@@ -1,6 +1,9 @@
 # build docker image from nvidia/cuda image with CUDA 11.0
 FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04
 
+# This tells girder_worker to enable gpu if possible
+LABEL com.nvidia.volumes.needed=nvidia_driver
+
 ARG DEBIAN_FRONTEND=noninteractive
 
 # maintainer of docker file
@@ -36,7 +39,9 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     wget \
     vim \
-    git
+    git \
+    # can speed up large_image caching \
+    memcached
 
 # install python3 dependencies
 RUN pip3 install --default-timeout=1000 pyfast==4.6.0
@@ -64,7 +69,8 @@ ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 # test entrypoint
 RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
-#RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help  # <- cannot run this inside here as there is no X11 (!)
+RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help  # <- cannot run this inside here as there is no X11 (!)
 
 # define docker entrypoint
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
+
