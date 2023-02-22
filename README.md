@@ -47,6 +47,6 @@ The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSl
 
 ## License
 
-The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main/LICENSE)
+The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main/LICENSE).
 
 Note that the different components used have their respective licenses. However, to the best of our knowledge, they are all dependencies used have permissive licenses with no real proprietary limitations.
