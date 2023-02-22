@@ -1,17 +1,59 @@
-# setup docker image from Python image
-FROM python:3.9-slim
+# build docker image from nvidia/cuda image with CUDA 11.0
+FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# maintainer of docker file
+# MAINTAINER André Pedersen <andre.pedersen@sintef.no>
+
+# set language, format, and stuff
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
+# install OpenGL
+RUN apt-get update && apt-get -y upgrade \
+  && apt-get install -y \
+    apt-utils \
+    curl \
+    xz-utils \
+    ocl-icd-libopencl1 \
+    opencl-headers \
+    clinfo \
+    python3-pip \
+    ;
+RUN mkdir -p /etc/OpenCL/vendors && \
+    echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
+# install OpenGL
+RUN apt-get install -y \
+    libopengl0 \
+    libgl1 \
+    libusb-1.0-0-dev \
+    libcairo2
+
+# install convenience tools
+RUN apt-get install -y \
+    wget \
+    vim
+
+# install python3 dependencies
+RUN pip3 install --default-timeout=1000 pyfast==4.6.0
 
 # install histomicstk necessary for communicating with HistomicsUI
-RUN python -m pip install histomicstk --find-links https://girder.github.io/large_image_wheels
+RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
+
+# download test sample and place it in /pipelines/
+# RUN cd /opt/pipelines/ && wget https://folk.ntnu.no/andpeder/FastPathology/test_data/WSI/A05.svs
 
 # set working directory and setup environment
-ADD . /opt/FPweb/dsa
-WORKDIR /opt/FPweb/dsa/cli
-ENV PYTHONPATH=$PYTHONPATH:/opt/FPweb/dsa
+ADD . /opt/fastpathology/dsa
+WORKDIR /opt/fastpathology/dsa/cli
+ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 
 # test entrypoint
-RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli
-RUN python -m slicer_cli_web.cli_list_entrypoint FPInference --help
+RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
+RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
 
 # define docker entrypoint
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
