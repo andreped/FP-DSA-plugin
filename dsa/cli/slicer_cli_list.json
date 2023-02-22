@@ -1,5 +1,8 @@
 {
     "NucleiSegmentation": {
         "type": "python"
+    },
+    "FASTNucleiSegmentation": {
+        "type": "python"
     }
 }
