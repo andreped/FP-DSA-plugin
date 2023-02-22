@@ -14,6 +14,8 @@ import histomicstk.utils as htk_utils
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
 
+import fast  # <- @TODO: Does this work within the plugin? Will likely fail
+
 
 logging.basicConfig(level=logging.CRITICAL)
 

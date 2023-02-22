@@ -1,22 +1,7 @@
 import fast
 import os
-from utils import force_run_exporters
+from .utils import enable_fast_verbosity, download_models, run_pipeline
 from argparse import ArgumentParser
-
-
-def enable_fast_verbosity():
-    fast.Reporter.setGlobalReportMethod(fast.Reporter.COUT)
-
-
-def download_models(model_name):
-    model_name = model_name.replace("_", "_") + "-model"
-    fast.DataHub().download(model_name)
-
-
-def run_pipeline(fpl, input_, output, model):
-    pipeline = fast.Pipeline(fpl, {"input": input_, "output": output, "model": model})
-    pipeline.parse()
-    force_run_exporters(pipeline)
 
 
 def main():

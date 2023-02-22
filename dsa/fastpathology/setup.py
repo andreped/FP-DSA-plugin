@@ -1,19 +1,22 @@
 import setuptools
 
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+with open("README.md", "r", encoding="utf-8") as f:
+    long_description = f.read()
+
 
 setuptools.setup(
     name="fastpathology",
     version="0.0.1",
     author="André Pedersen",
     author_email="andrped94@gmail.com",
+    license="MIT",
     description="Package for seemlessly using FAST pipelines in Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/andreped/FP-dsa-plugin/tree/main/dsa/fastpathology",
-    packages=setuptools.find_packages(),
+    include_package_data=True,
+    #packages=setuptools.find_packages(),
     install_requires=[
         "pyFAST",
     ],
