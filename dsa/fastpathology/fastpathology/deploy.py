@@ -19,12 +19,7 @@ def run_pipeline(fpl, input_, output, model):
     force_run_exporters(pipeline)
 
 
-def main(fpl, input_, output, model):
-    download_models(fpl.split("/")[-1].split(".")[0])
-    run_pipeline(input, output, model)
-
-
-if __name__ == "__main__":
+def main():
     parser = ArgumentParser()
     parser.add_argument("-f", "--fpl", type=str, help="Which pipeline to use, e.g., '/opt/pipelines/tumor_seg.fpl'.")
     parser.add_argument("-i", "--input", type=str, help="Full path to which whole slide image (WSI) to run pipeline on, e.g., '/opt/images/image.tiff'.")
@@ -38,4 +33,9 @@ if __name__ == "__main__":
     if args.verbose:
         enable_fast_verbosity()
 
+    download_models(args.fpl.split("/")[-1].split(".")[0])
+    run_pipeline(args.fpl, args.input, args.output, args.model)
+
+
+if __name__ == "__main__":
     main()

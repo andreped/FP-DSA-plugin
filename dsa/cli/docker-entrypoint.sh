@@ -7,7 +7,7 @@ memcached -u root -d -m 1024 || true
 # an extra exec if we find the path directly
 POSSIBLE_PATH="$1/$1.py"
 if [[ -f "$POSSIBLE_PATH" ]]; then
-    python -u "$POSSIBLE_PATH" "${@:2}"
+    python3 -u "$POSSIBLE_PATH" "${@:2}"
 else
-    python -u -m slicer_cli_web.cli_list_entrypoint "$@"
+    python3 -u -m slicer_cli_web.cli_list_entrypoint "$@"
 fi

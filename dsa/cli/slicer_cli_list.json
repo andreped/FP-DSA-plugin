@@ -1,5 +1,5 @@
 {
-    "FPInference": {
+    "NucleiSegmentation": {
         "type": "python"
     }
 }

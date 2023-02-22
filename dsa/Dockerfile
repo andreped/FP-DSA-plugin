@@ -4,7 +4,7 @@ FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 # maintainer of docker file
-# MAINTAINER André Pedersen <andre.pedersen@sintef.no>
+LABEL maintainer="André Pedersen andre.pedersen@sintef.no"
 
 # set language, format, and stuff
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
