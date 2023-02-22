@@ -1,5 +1,6 @@
 import fast
 import os
+from utils import force_run_exporters
 
 
 fast.Reporter.setGlobalReportMethod(fast.Reporter.COUT)
@@ -21,8 +22,7 @@ pipeline = fast.Pipeline(
 )
 
 pipeline.parse()
-pipeline.getProcessObject('pwExporter').run()
-pipeline.getProcessObject('segExporter').run()
+force_run_exporters(pipeline)
 
 print("Was export successful:", os.path.exists(output + ".tiff"))
 print("Result is saved at:", output)

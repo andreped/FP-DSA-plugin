@@ -1,5 +1,6 @@
 import fast
 import os
+from utils import force_run_exporters
 
 
 fast.Reporter.setGlobalReportMethod(fast.Reporter.COUT)
@@ -15,7 +16,7 @@ pipeline = fast.Pipeline(
 )
 
 pipeline.parse()
-pipeline.getProcessObject('exporter').run()
+force_run_exporters(pipeline)
 
 print("Was export successful:", os.path.exists(output))
 print("Result is saved at:", output)
