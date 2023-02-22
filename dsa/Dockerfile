@@ -35,13 +35,23 @@ RUN apt-get install -y \
 # install convenience tools
 RUN apt-get install -y \
     wget \
-    vim
+    vim \
+    git
 
 # install python3 dependencies
 RUN pip3 install --default-timeout=1000 pyfast==4.6.0
 
 # install histomicstk necessary for communicating with HistomicsUI
 RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
+
+# install fastpathology python package
+RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
+  && cd FP-dsa-plugin/dsa/fastpathology/ \
+  && pip install -e .
+  #&& python3 setup.py install
+
+# test fastpathology entrypoint
+#RUN pip3 list && ls -la && fastpathology && python3 -m fastpathology -h
 
 # download test sample and place it in /pipelines/
 # RUN cd /opt/pipelines/ && wget https://folk.ntnu.no/andpeder/FastPathology/test_data/WSI/A05.svs
