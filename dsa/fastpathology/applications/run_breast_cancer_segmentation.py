@@ -10,14 +10,14 @@ fast.Reporter.setGlobalReportMethod(fast.Reporter.COUT)
 fast.DataHub().download('breast-tumour-segmentation-model')
 
 output = "/opt/pipelines/prediction"
+model = "/root/FAST/datahub/"
 
 pipeline = fast.Pipeline(
 	'/opt/pipelines/breast_tumour_segmentation.fpl',
 	{
 		'wsi': '/opt/pipelines/A05.svs',
 		'output': output,
-		'pwModel': "/root/FAST/datahub/breast-tumour-segmentation-model/pw_tumour_mobilenetv2_model.onnx",
-		'refinementModel': "/root/FAST/datahub/breast-tumour-segmentation-model/unet_tumour_refinement_model_fix-opset9.onnx",
+		'model': model,
 	}
 )
 
