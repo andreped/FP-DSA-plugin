@@ -4,6 +4,7 @@
 
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
 
+
 ## Requirements
 
 DSA needs to be installed. Follow the instructions [here](https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/dsa) on how to do so.
@@ -44,6 +45,7 @@ To add the plugin to DSA, choose `Upload new Task` under Slicer CLI Web Tasks in
 The core was built based on [pyFAST](https://github.com/smistad/FAST), and the plugin was inspired by the plugins made for [MONAILabel](https://github.com/Project-MONAI/MONAILabel/tree/main/plugins/dsa) and [HistomicsTK](https://github.com/DigitalSlideArchive/HistomicsTK/tree/master/histomicstk/cli).
 
 The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSlideArchive/digital_slide_archive) which have developed an open and extremely robust and user-friendly archive web solution for large microscopy images. Building our methods on top of DSA was done with ease and credit to the developers such as [manthey](https://github.com/manthey) for addressing any issue and concerns we had at impressive speed!
+
 
 ## License
 
