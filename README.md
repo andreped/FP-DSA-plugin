@@ -1,5 +1,9 @@
 # DSA FAST-Pathology extension
 
+**DISCLAIMER:** This is a work in progress. When I have the plugin properly working and stable, I will make a public docker image, and make a release here.
+
+Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
+
 ## Requirements
 
 DSA needs to be installed. Follow the instructions [here](https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/dsa) on how to do so.
