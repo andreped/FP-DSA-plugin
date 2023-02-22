@@ -39,21 +39,3 @@ if __name__ == "__main__":
         enable_fast_verbosity()
 
     main()
-
-    '''
-    fast.DataHub().download('breast-tumour-segmentation-model')
-    fpl_file = "/opt/pipelines/breast_tumour_segmentation.fpl"
-    output = "/opt/pipelines/prediction"
-    model = "/root/FAST/datahub/"
-
-    pipeline = fast.Pipeline(
-        fpl_file,
-        {
-            'wsi': '/opt/pipelines/A05.svs',
-            'output': output,
-            'model': model,
-        }
-    )
-    pipeline.parse()
-    force_run_exporters(pipeline)
-    '''
