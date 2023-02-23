@@ -15,9 +15,6 @@ import histomicstk.utils as htk_utils
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
 
-#import fast  # <- @TODO: Does this work within the plugin? Will likely fail
-#print("FAST import worked!")
-
 
 logging.basicConfig(level=logging.CRITICAL)
 
@@ -85,7 +82,10 @@ def main(args):
     ])
 
     # when prediction file has been converted to an annotation file, the temporary dir can be closed (and deleted)
-    fast_output_dir.close()
+    fast_output_dir.cleanup()
+
+    # convert pyramidal TIFF output from pyFAST to JSON annotation file (*.ann)
+
 
 
     #
