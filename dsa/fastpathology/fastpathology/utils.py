@@ -12,7 +12,8 @@ def enable_fast_verbosity():
 
 
 def download_models(model_name):
-    model_name = model_name.replace("_", "_") + "-model"
+    model_name = model_name.replace("_", "-") + "-model"
+    print("Current model_name:", model_name)
     fast.DataHub().download(model_name)
 
 
