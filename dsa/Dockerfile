@@ -49,14 +49,6 @@ RUN pip3 install --default-timeout=1000 pyfast==4.6.0
 # install histomicstk necessary for communicating with HistomicsUI
 RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
 
-RUN ls -la
-
-# install fastpathology python package
-RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
-  && cd FP-dsa-plugin/dsa/fastpathology/ \
-  && pip install -e .
-  #&& python3 setup.py install
-
 # test fastpathology entrypoint
 #RUN pip3 list && ls -la && fastpathology && python3 -m fastpathology -h
 
@@ -68,11 +60,22 @@ ADD . /opt/fastpathology/dsa
 WORKDIR /opt/fastpathology/dsa/cli
 ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 
+# copy fastpathology into working directory
+#COPY fastpathology/fastpathology $WORKDIR
+COPY fastpathology .
+
+RUN ls -la && ls fastpathology/pipelines && ls /opt/fastpathology/dsa/cli/fastpathology/pipelines && pwd
+
+# install fastpathology python package
+RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
+  && cd FP-dsa-plugin/dsa/fastpathology/ \
+  && pip install -e .
+  #&& python3 setup.py install
+
 # test entrypoint
 RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
 RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help  # <- cannot run this inside here as there is no X11 (!)
-
 
 # define docker entrypoint
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]

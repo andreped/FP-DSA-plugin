@@ -80,7 +80,7 @@ def main(args):
     # run nuclei segmentation FPL
     import subprocess as sp
     sp.check_call([
-        "fastpathology", "-f", "/opt/fastpathology/dsa/fastpathology/pipelines/breast_tumour_segmentation.fpl",
+        "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/breast_tumour_segmentation.fpl",
         "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir
     ])
 
