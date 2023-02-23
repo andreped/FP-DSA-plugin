@@ -6,6 +6,7 @@ import time
 import large_image
 import numpy as np
 import tempfile
+from tqdm import tqdm
 
 import histomicstk.preprocessing.color_deconvolution as htk_cdeconv
 import histomicstk.preprocessing.color_normalization as htk_cnorm
@@ -58,6 +59,7 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
 
 
 def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
+    print("\nprocessing tile ...")
     # get slide tile source
     ts = large_image.getTileSource(slide_path)
 
@@ -70,19 +72,20 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
     # get tile image
     im_tile = tile_info['tile'][:, :, :3]
 
+    # make segmentation image
+    im_seg_mask = im_tile[:, :, 0]
+
     # Delete border nuclei
     if args.ignore_border_nuclei is True:
-        im_seg_mask = htk_seg_label.delete_border(im_tile)
+        im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
 
     # generate annotations
     annot_list = []
+    
+    flag_object_found = np.any(im_seg_mask)
 
-    flag_nuclei_found = np.any(im_seg_mask)
-
-    if flag_nuclei_found:
-        annot_list = create_tile_boundary_annotations(
-            im_seg_mask, tile_info, args.annotation_format
-        )
+    if flag_object_found:
+        annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
 
     return annot_list
 
@@ -146,7 +149,7 @@ def main(args):
     import subprocess as sp
     sp.check_call([
         "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/breast_tumour_segmentation.fpl",
-        "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir
+        "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "0"
     ])
 
     # when prediction file has been converted to an annotation file, the temporary dir can be closed (and deleted)
@@ -154,20 +157,58 @@ def main(args):
 
     # convert pyramidal TIFF output from pyFAST to JSON annotation file (*.anot)
     # iterate over annotation image in tiled fashion, get unique elements, and save coordinates from each in JSON file
-    
-    importer = fast.TIFFImagePyramidExporter.create(args.inputImageFile)
-    patchgen = fast.PatchGenerator.create(width=256, height=256, level=0).connect(importer)
-    streamer = fast.DataStream(patchgen)
 
-    annot_list = []
-    for patch in streamer:
-        print(patch)
-        coords = [x[0] for x in patch.getTransform().getTranslation()]
-        patch_image = np.asarray(patch)  # convert from fast image to numpy array
-        print(coords)
-        print("---")
+    print('\n>> Converting Pyramidal TIFF annotations to JSON ...\n')
 
+    # get slide tile source
+    ts = large_image.getTileSource(args.inputImageFile)
+
+    #tile_fgnd_frac_list = [1.0]
+
+    it_kwargs = {
+        'tile_size': {'width': args.analysis_tile_size},
+        'scale': {'magnification': args.analysis_mag},
+    }
+
+    start_time = time.time()
+
+    tile_list = []
+
+    for tile in tqdm(ts.tileIterator(**it_kwargs), "Tile"):
+
+        tile_position = tile['tile_position']['position']
+
+        #if tile_fgnd_frac_list[tile_position] <= args.min_fgnd_frac:
+        #    continue
+
+        # detect nuclei
+        #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
+        curr_annot_list = get_annot_from_tiff_tile(
+            args.inputImageFile,
+            tile_position,
+            args,
+            it_kwargs
+        )
+
+        # append result to list
+        tile_list.append(curr_annot_list)
     
+    print("Done iterating tiles. Total number of tiles were:", len(tile_list))
+    
+    #from dask.diagnostics import ProgressBar
+
+    #with ProgressBar():
+    #    tile_list = dask.delayed(tile_list).compute()
+
+    annot_list = [anot for anot_list in annot_list for anot in anot_list]
+
+    nuclei_detection_time = time.time() - start_time
+
+    print('Number of nuclei = {}'.format(len(annot_list)))
+
+    print('Nuclei detection time = {}'.format(
+        cli_utils.disp_time_hms(nuclei_detection_time)))
+
     print('\n>> Writing annotation file ...\n')
 
     annot_fname = os.path.splitext(

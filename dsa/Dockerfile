@@ -43,11 +43,12 @@ RUN apt-get install -y \
     # can speed up large_image caching \
     memcached
 
-# install python3 dependencies
+# install pyFAST dependencies
 RUN pip3 install --default-timeout=1000 pyfast==4.6.0
 
 # install histomicstk necessary for communicating with HistomicsUI
 RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
+RUN pip3 install tqdm
 
 # test fastpathology entrypoint
 #RUN pip3 list && ls -la && fastpathology && python3 -m fastpathology -h
