@@ -6,18 +6,18 @@ Attribute classes "Background;Cell nuclei"
 
 ### Processing chain
 
-ProcessObject WSI WholeSlideImageImporter
+ProcessObject importer WholeSlideImageImporter
 Attribute filename @@input@@
 
 ProcessObject tissueSeg TissueSegmentation
-Input 0 WSI 0
+Input 0 importer 0
 
 ProcessObject patch PatchGenerator
 Attribute patch-size 256 256
 Attribute patch-magnification 20
 #Attribute patch-overlap 0.1
-Input 0 WSI
-Input 1 tissueSeg 0
+Input 0 importer 0
+Input 1 tissueSeg 0 
 
 ProcessObject network SegmentationNetwork
 Attribute scale-factor 0.003921568627451
@@ -27,6 +27,10 @@ Input 0 patch 0
 ProcessObject stitcher PatchStitcher
 Input 0 network 0
 
-ProcessObject exporter TIFFImagePyramidExporter
-Attribute filename @@output@@".tiff"
+ProcessObject finish RunUntilFinished
 Input 0 stitcher 0
+
+ProcessObject segExporter TIFFImagePyramidExporter
+Attribute filename @@output@@".tiff"
+Input 0 finish 0
+

@@ -152,18 +152,20 @@ def main(args):
         "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "1"
     ])
 
+    pred_output_path = fast_output_dir.name + ".tiff"
+
     # when prediction file has been converted to an annotation file, the temporary dir can be closed (and deleted)
-    fast_output_dir.cleanup()
+    #fast_output_dir.cleanup()
 
     # convert pyramidal TIFF output from pyFAST to JSON annotation file (*.anot)
     # iterate over annotation image in tiled fashion, get unique elements, and save coordinates from each in JSON file
 
     print('\n>> Converting Pyramidal TIFF annotations to JSON ...\n')
 
-    print("loading pyramidal tiff seg:", args.fast_output_dir.name + ".tiff")
+    print("loading pyramidal tiff seg:", pred_output_path)
 
     # get slide tile source
-    ts = large_image.getTileSource(args.fast_output_dir.name + ".tiff")
+    ts = large_image.getTileSource(pred_output_path)
 
     #tile_fgnd_frac_list = [1.0]
 
@@ -186,7 +188,7 @@ def main(args):
         # detect nuclei
         #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
         curr_annot_list = get_annot_from_tiff_tile(
-            args.inputImageFile,
+            pred_output_path,
             tile_position,
             args,
             it_kwargs
