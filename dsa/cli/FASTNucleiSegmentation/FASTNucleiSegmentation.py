@@ -21,16 +21,33 @@ from histomicstk.cli.utils import CLIArgumentParser
 logging.basicConfig(level=logging.CRITICAL)
 
 
+import signal
+
+class timeout:
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
+
+
 def create_tile_boundary_annotations(im_seg_mask, tile_info):
     nuclei_annot_list = []
 
-    gx = tile_info['gx']
-    gy = tile_info['gy']
-    wfrac = tile_info['gwidth'] / np.double(tile_info['width'])
-    hfrac = tile_info['gheight'] / np.double(tile_info['height'])
+    gx = tile_info['gx'] * 4
+    gy = tile_info['gy'] * 4
+    wfrac = tile_info['gwidth'] / np.double(tile_info['width']) * 4
+    hfrac = tile_info['gheight'] / np.double(tile_info['height']) * 4
 
     by, bx = htk_seg.label.trace_object_boundaries(im_seg_mask,
                                                    trace_all=True)
+    
+    print("by,bx:", by, " | ", bx)
 
     for i in range(len(bx)):
         # get boundary points and convert to base pixel space
@@ -59,33 +76,38 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
 
 
 def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
-    print("\nprocessing tile ...")
-    # get slide tile source
-    ts = large_image.getTileSource(slide_path)
+    try:
+        print("\nprocessing tile ...")
+        # get slide tile source
+        ts = large_image.getTileSource(slide_path)
 
-    # get requested tile
-    tile_info = ts.getSingleTile(
-        tile_position=tile_position,
-        format=large_image.tilesource.TILE_FORMAT_NUMPY,
-        **it_kwargs)
+        # get requested tile
+        tile_info = ts.getSingleTile(
+            tile_position=tile_position,
+            format=large_image.tilesource.TILE_FORMAT_NUMPY,
+            **it_kwargs)
 
-    # get tile image
-    im_tile = tile_info['tile'][:, :, :3]
+        # get tile image
+        im_tile = tile_info['tile'][:, :, :3]
 
-    # make segmentation image
-    im_seg_mask = im_tile[:, :, 0]
+        # make segmentation image
+        im_seg_mask = im_tile[:, :, 0]
 
-    # Delete border nuclei
-    if args.ignore_border_nuclei is True:
-        im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
+        # Delete border nuclei
+        if args.ignore_border_nuclei is True:
+            im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
 
-    # generate annotations
-    annot_list = []
-    
-    flag_object_found = np.any(im_seg_mask)
+        # generate annotations
+        annot_list = []
+        
+        flag_object_found = np.any(im_seg_mask)
 
-    if flag_object_found:
-        annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
+        if flag_object_found:
+            annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
+
+    except Exception as e:
+        print(e)
+        return []
 
     return annot_list
 
@@ -151,7 +173,7 @@ def main(args):
 
     sp.check_call([
         "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/nuclei_segmentation.fpl",
-        "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "1"
+        "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "0"
     ])
 
     pred_output_path = fast_output_dir.name + ".tiff"
@@ -169,44 +191,113 @@ def main(args):
     # get slide tile source
     ts = large_image.getTileSource(pred_output_path)
 
-    #tile_fgnd_frac_list = [1.0]
+    """
+    num_tiles = ts.getSingleTile(**it_kwargs)['iterator_range']['position']
+
+    print(f'Number of tiles = {num_tiles}')
+
+    # calculate foreground tile percentage
+    im_fgnd_mask_lres, fgnd_seg_scale = \
+            cli_utils.segment_wsi_foreground_at_low_res(ts)
+
+    tile_fgnd_frac_list = htk_utils.compute_tile_foreground_fraction(
+        args.inputImageFile, im_fgnd_mask_lres, fgnd_seg_scale,
+        it_kwargs
+    )
+
+    num_fgnd_tiles = np.count_nonzero(
+        tile_fgnd_frac_list >= args.min_fgnd_frac)
+
+    percent_fgnd_tiles = 100.0 * num_fgnd_tiles / num_tiles
+
+    fgnd_frac_comp_time = time.time() - start_time
+
+    print('Number of foreground tiles = {:d} ({:2f}%%)'.format(
+        num_fgnd_tiles, percent_fgnd_tiles))
+
+    print('Tile foreground fraction computation time = {}'.format(
+        cli_utils.disp_time_hms(fgnd_frac_comp_time)))
+    """
 
     it_kwargs = {
         'tile_size': {'width': args.analysis_tile_size},
-        'scale': {'magnification': 20},  # args.analysis_mag},
+        'scale': {'magnification': args.analysis_mag},  # args.analysis_mag},
     }
+
+    def tileGen_wrapper(iterator):
+        try:
+            yield next(iterator)
+        except StopIteration:
+            return None
+
+
+        
 
     start_time = time.time()
 
-    tile_list = []
+    annot_list = []
 
-    for tile in tqdm(ts.tileIterator(**it_kwargs), "Tile"):
+    generator = ts.tileIterator(**it_kwargs)
 
-        tile_position = tile['tile_position']['position']
+    #iter = 0
+    #for tile in tqdm(ts.tileIterator(**it_kwargs), "Tile"):
+    iter = 0
+    while True:
+        iter += 1
+        print("\nIter:", iter)
+        with timeout(seconds=5):
+            try:
+                tile = next(generator)
 
-        #if tile_fgnd_frac_list[tile_position] <= args.min_fgnd_frac:
-        #    continue
+                tile_position = tile['tile_position']['position']
 
-        # detect nuclei
-        #curr_annot_list = get_annot_from_tiff_tile(
-        curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
-            pred_output_path,
-            tile_position,
-            args,
-            it_kwargs
-        )
+                print(tile_position)
 
-        # append result to list
-        tile_list.append(curr_annot_list)
+                #if tile_fgnd_frac_list[tile_position] <= args.min_fgnd_frac:
+                #    continue 
+
+                # detect nuclei
+                #curr_annot_list = get_annot_from_tiff_tile(
+                #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
+                #curr_annot_list = get_annot_from_tiff_tile(
+                curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
+                    pred_output_path,
+                    tile_position,
+                    args,
+                    it_kwargs
+                ).compute()
+                
+                # curr_annot_list.compute()
+
+                print(curr_annot_list)
+
+                # append result to list
+                #tile_list.append(curr_annot_list)
+                annot_list.extend(curr_annot_list)
+                
+            except StopIteration:
+                print("\n Iterator is empty. Stopped iterator ...")
+                break
+            except TimeoutError:
+                print("Operation timed out...")
+                pass
+            except Exception:
+                print("\n Something wrong with tile ...")
+                pass
+
+        #iter += 1
+
+        #if iter == 50:
+        #    break
     
-    print("Done iterating tiles. Total number of tiles were:", len(tile_list))
+    print("Done iterating tiles. Total number of tiles were:", len(annot_list))
     
     from dask.diagnostics import ProgressBar
 
     #with ProgressBar():
-    tile_list = dask.delayed(tile_list).compute()
+    #tile_list = dask.delayed(tile_list).compute()
 
-    annot_list = [anot for anot_list in annot_list for anot in anot_list]
+    #annot_list = [anot for anot_list in annot_list for anot in anot_list]
 
     nuclei_detection_time = time.time() - start_time
 
@@ -216,6 +307,8 @@ def main(args):
         cli_utils.disp_time_hms(nuclei_detection_time)))
 
     print('\n>> Writing annotation file ...\n')
+
+    print('\n outputNucleiAnnotationFile:', args.outputNucleiAnnotationFile)
 
     annot_fname = os.path.splitext(
         os.path.basename(args.outputNucleiAnnotationFile))[0]
