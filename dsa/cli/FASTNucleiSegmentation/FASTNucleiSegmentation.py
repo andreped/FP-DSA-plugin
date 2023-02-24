@@ -37,17 +37,26 @@ class timeout:
 
 
 def create_tile_boundary_annotations(im_seg_mask, tile_info):
-    nuclei_annot_list = []
 
-    gx = tile_info['gx'] * 4
-    gy = tile_info['gy'] * 4
-    wfrac = tile_info['gwidth'] / np.double(tile_info['width']) * 4
-    hfrac = tile_info['gheight'] / np.double(tile_info['height']) * 4
+    gx = tile_info['gx']
+    gy = tile_info['gy']
+    wfrac = tile_info['gwidth'] / np.double(tile_info['width'])
+    hfrac = tile_info['gheight'] / np.double(tile_info['height'])
 
-    by, bx = htk_seg.label.trace_object_boundaries(im_seg_mask,
-                                                   trace_all=True)
+    # make binary image (if not already)
+    im_seg_mask = (im_seg_mask > 0).astype("uint8")
+
+    print("nonzero pixels before trace boundaries:", np.count_nonzero(im_seg_mask))
+
+    by, bx = htk_seg.label.trace_object_boundaries(
+        im_seg_mask, trace_all=True, 
+    )
+    #by *= 4
+    #bx *= 4
     
     print("by,bx:", by, " | ", bx)
+
+    nuclei_annot_list = []
 
     for i in range(len(bx)):
         # get boundary points and convert to base pixel space
@@ -57,8 +66,8 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
             continue
 
         cur_points = np.zeros((num_points, 3))
-        cur_points[:, 0] = np.round(gx + bx[i] * wfrac, 2)
-        cur_points[:, 1] = np.round(gy + by[i] * hfrac, 2)
+        cur_points[:, 0] = np.round(gx + bx[i] * wfrac, 2) * 4
+        cur_points[:, 1] = np.round(gy + by[i] * hfrac, 2) * 4
         cur_points = cur_points.tolist()
 
         # create annotation json
@@ -94,13 +103,15 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         im_seg_mask = im_tile[:, :, 0]
 
         # Delete border nuclei
-        if args.ignore_border_nuclei is True:
-            im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
+        #if args.ignore_border_nuclei is True:
+        #    im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
 
         # generate annotations
         annot_list = []
         
         flag_object_found = np.any(im_seg_mask)
+
+        print("count nonzero seg mask tile:", np.count_nonzero(im_seg_mask))
 
         if flag_object_found:
             annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
@@ -191,47 +202,10 @@ def main(args):
     # get slide tile source
     ts = large_image.getTileSource(pred_output_path)
 
-    """
-    num_tiles = ts.getSingleTile(**it_kwargs)['iterator_range']['position']
-
-    print(f'Number of tiles = {num_tiles}')
-
-    # calculate foreground tile percentage
-    im_fgnd_mask_lres, fgnd_seg_scale = \
-            cli_utils.segment_wsi_foreground_at_low_res(ts)
-
-    tile_fgnd_frac_list = htk_utils.compute_tile_foreground_fraction(
-        args.inputImageFile, im_fgnd_mask_lres, fgnd_seg_scale,
-        it_kwargs
-    )
-
-    num_fgnd_tiles = np.count_nonzero(
-        tile_fgnd_frac_list >= args.min_fgnd_frac)
-
-    percent_fgnd_tiles = 100.0 * num_fgnd_tiles / num_tiles
-
-    fgnd_frac_comp_time = time.time() - start_time
-
-    print('Number of foreground tiles = {:d} ({:2f}%%)'.format(
-        num_fgnd_tiles, percent_fgnd_tiles))
-
-    print('Tile foreground fraction computation time = {}'.format(
-        cli_utils.disp_time_hms(fgnd_frac_comp_time)))
-    """
-
     it_kwargs = {
         'tile_size': {'width': args.analysis_tile_size},
         'scale': {'magnification': args.analysis_mag},  # args.analysis_mag},
     }
-
-    def tileGen_wrapper(iterator):
-        try:
-            yield next(iterator)
-        except StopIteration:
-            return None
-
-
-        
 
     start_time = time.time()
 
@@ -245,7 +219,8 @@ def main(args):
     while True:
         iter += 1
         print("\nIter:", iter)
-        with timeout(seconds=5):
+
+        with timeout(seconds=1):
             try:
                 tile = next(generator)
 
@@ -274,7 +249,7 @@ def main(args):
                 # append result to list
                 #tile_list.append(curr_annot_list)
                 annot_list.extend(curr_annot_list)
-                
+
             except StopIteration:
                 print("\n Iterator is empty. Stopped iterator ...")
                 break
