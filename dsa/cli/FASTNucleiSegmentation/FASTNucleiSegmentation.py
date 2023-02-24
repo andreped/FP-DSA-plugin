@@ -142,11 +142,13 @@ def main(args):
 
     # get current home directory and get path to FAST DataHub
     from pathlib import Path
+
     home = str(Path.home())
     datahub_dir = home + "/FAST/datahub/"
 
     # run nuclei segmentation FPL
     import subprocess as sp
+
     sp.check_call([
         "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/nuclei_segmentation.fpl",
         "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "1"
@@ -186,8 +188,8 @@ def main(args):
         #    continue
 
         # detect nuclei
-        #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
-        curr_annot_list = get_annot_from_tiff_tile(
+        #curr_annot_list = get_annot_from_tiff_tile(
+        curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
             pred_output_path,
             tile_position,
             args,
@@ -199,10 +201,10 @@ def main(args):
     
     print("Done iterating tiles. Total number of tiles were:", len(tile_list))
     
-    #from dask.diagnostics import ProgressBar
+    from dask.diagnostics import ProgressBar
 
     #with ProgressBar():
-    #    tile_list = dask.delayed(tile_list).compute()
+    tile_list = dask.delayed(tile_list).compute()
 
     annot_list = [anot for anot_list in annot_list for anot in anot_list]
 
