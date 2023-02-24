@@ -148,8 +148,8 @@ def main(args):
     # run nuclei segmentation FPL
     import subprocess as sp
     sp.check_call([
-        "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/breast_tumour_segmentation.fpl",
-        "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "0"
+        "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/nuclei_segmentation.fpl",
+        "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "1"
     ])
 
     # when prediction file has been converted to an annotation file, the temporary dir can be closed (and deleted)
@@ -160,14 +160,16 @@ def main(args):
 
     print('\n>> Converting Pyramidal TIFF annotations to JSON ...\n')
 
+    print("loading pyramidal tiff seg:", args.fast_output_dir.name + ".tiff")
+
     # get slide tile source
-    ts = large_image.getTileSource(args.inputImageFile)
+    ts = large_image.getTileSource(args.fast_output_dir.name + ".tiff")
 
     #tile_fgnd_frac_list = [1.0]
 
     it_kwargs = {
         'tile_size': {'width': args.analysis_tile_size},
-        'scale': {'magnification': args.analysis_mag},
+        'scale': {'magnification': 20},  # args.analysis_mag},
     }
 
     start_time = time.time()

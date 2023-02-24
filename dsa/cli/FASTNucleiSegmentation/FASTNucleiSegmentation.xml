@@ -183,7 +183,7 @@
       <label>Analysis Magnification</label>
       <description>The magnification at which the analysis should be performed.</description>
       <longflag>analysis_mag</longflag>
-      <default>10</default>
+      <default>20</default>
     </double>
     <double>
       <name>min_fgnd_frac</name>

@@ -1,6 +1,7 @@
 PipelineName "Nuclei segmentation"
-PipelineDescription "Segmentation of cell nuclei based on pretrained U-Net model."
+PipelineDescription "Patch-wise segmentation of cell nuclei at 20X magnification using U-Net"
 PipelineOutputData segmentation stitcher 0
+Attribute classes "Background;Cell nuclei"
 
 
 ### Processing chain
@@ -14,13 +15,13 @@ Input 0 WSI 0
 ProcessObject patch PatchGenerator
 Attribute patch-size 256 256
 Attribute patch-magnification 20
-Attribute patch-overlap 0.1
+#Attribute patch-overlap 0.1
 Input 0 WSI
 Input 1 tissueSeg 0
 
 ProcessObject network SegmentationNetwork
 Attribute scale-factor 0.003921568627451
-Attribute model @@model@@"/tissue-segmentation-model/high_res_nuclei_unet.onnx"
+Attribute model @@model@@"/nuclei-segmentation-model/high_res_nuclei_unet.onnx"
 Input 0 patch 0
 
 ProcessObject stitcher PatchStitcher
