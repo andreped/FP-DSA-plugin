@@ -112,10 +112,6 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         # make segmentation image
         im_seg_mask = im_tile[:, :, 0]
 
-        # Delete border nuclei
-        #if args.ignore_border_nuclei is True:
-        #    im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
-
         # generate annotations
         flag_object_found = np.any(im_seg_mask)
 
@@ -124,12 +120,12 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         if counts == 0:
             return annot_list
 
-        #elif counts > 50000:
+        #elif counts > 50000:  # uncomment to avoid memory leak - however then dense nuclei regions will not be segmented/annotated/drawn
         #    return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
 
         if flag_object_found:
             annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
-
+        
     except Exception as e:
         print(e)
         return annot_list
@@ -208,8 +204,6 @@ def main(args):
 
     print('\n>> Converting Pyramidal TIFF annotations to JSON ...\n')
 
-    print("loading pyramidal tiff seg:", pred_output_path)
-
     # get slide tile source
     ts = large_image.getTileSource(pred_output_path)
 
@@ -219,13 +213,9 @@ def main(args):
     }
 
     start_time = time.time()
-
     annot_list = []
-
     generator = ts.tileIterator(**it_kwargs)
 
-    #iter = 0
-    #for tile in tqdm(ts.tileIterator(**it_kwargs), "Tile"):
     iter = 0
     while True:
         iter += 1
@@ -234,10 +224,7 @@ def main(args):
         with timeout(seconds=3):
             try:
                 tile = next(generator)
-
                 tile_position = tile['tile_position']['position']
-
-                print(tile_position)
 
                 #if tile_fgnd_frac_list[tile_position] <= args.min_fgnd_frac:
                 #    continue 
@@ -254,12 +241,12 @@ def main(args):
                 
                 #.compute()
 
-                # print(curr_annot_list)
-
                 print("objects found in tile:", len(curr_annot_list))
 
                 # append result to list
                 annot_list.append(curr_annot_list)
+
+                # @TODO: Should write for every single tile, instead of storing all annotations in a large list
 
                 # append to JSON for each tile (to avoid memory leakage for millions of objects)
                 #annot_fname = os.path.splitext(os.path.basename(args.outputNucleiAnnotationFile))[0]
@@ -311,9 +298,9 @@ def main(args):
 
     #print('Nuclei detection time = {}'.format(cli_utils.disp_time_hms(nuclei_detection_time)))
 
-    #print('\n>> Writing annotation file ...\n')
+    print('\n>> Writing annotation file ...\n')
 
-    #print('\n outputNucleiAnnotationFile:', args.outputNucleiAnnotationFile)
+    print('\n outputNucleiAnnotationFile:', args.outputNucleiAnnotationFile)
 
     annot_fname = os.path.splitext(os.path.basename(args.outputNucleiAnnotationFile))[0]
 
