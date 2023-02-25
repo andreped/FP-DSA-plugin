@@ -8,25 +8,16 @@ import numpy as np
 import tempfile
 from tqdm import tqdm
 
-import histomicstk.preprocessing.color_deconvolution as htk_cdeconv
-import histomicstk.preprocessing.color_normalization as htk_cnorm
-import histomicstk.segmentation.label as htk_seg_label
-import histomicstk.segmentation.nuclear as htk_nuclear
-import histomicstk.segmentation as htk_seg
-import histomicstk.utils as htk_utils
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
 
 import cv2
-import skimage
-import scipy
 from urllib.error import HTTPError
+import signal
 
 
 logging.basicConfig(level=logging.CRITICAL)
 
-
-import signal
 
 class timeout:
     def __init__(self, seconds=1, error_message='Timeout'):
