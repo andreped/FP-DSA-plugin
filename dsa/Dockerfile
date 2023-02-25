@@ -46,9 +46,12 @@ RUN apt-get install -y \
 # install pyFAST dependencies
 RUN pip3 install --default-timeout=1000 pyfast==4.6.0
 
+# necessary for opencv in docker
+RUN apt-get install -y libglib2.0-0 libsm6 libxrender1 libxext6
+
 # install histomicstk necessary for communicating with HistomicsUI
 RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
-RUN pip3 install tqdm
+RUN pip3 install opencv-python scikit-image tqdm scipy
 
 # test fastpathology entrypoint
 #RUN pip3 list && ls -la && fastpathology && python3 -m fastpathology -h

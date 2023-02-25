@@ -17,6 +17,11 @@ import histomicstk.utils as htk_utils
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
 
+import cv2
+import skimage
+import scipy
+from urllib.error import HTTPError
+
 
 logging.basicConfig(level=logging.CRITICAL)
 
@@ -45,29 +50,92 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
 
     # make binary image (if not already)
     im_seg_mask = (im_seg_mask > 0).astype("uint8")
+    
+    #edges = cv2.Canny(im_seg_mask, )
 
-    print("nonzero pixels before trace boundaries:", np.count_nonzero(im_seg_mask))
+    """
 
-    by, bx = htk_seg.label.trace_object_boundaries(
-        im_seg_mask, trace_all=True, 
-    )
+    bx = []
+    by = []
+    
+    labels = skimage.measure.label(im_seg_mask).astype(int)
+
+    for unique in np.unique(labels)[1:]:
+        tmp = np.zeros_like(im_seg_mask)
+        tmp[labels == unique] = 1
+
+        # find all boundaries of binary image
+        distance = scipy.ndimage.distance_transform_edt(tmp)
+        distance[distance != 1] = 0
+        coords = np.where(distance == 1)
+
+        by.append(coords[0])
+        bx.append(coords[1])
+    
+    print("done processing uniques!")
+
+    print("number of unique objects:", len(bx))
+
+    # assumes all objects are the same object within a patch
+    #by = [coords[0]]
+    #bx = [coords[1]]
+
+    """
+
+    contours, hierarchy = cv2.findContours(image=im_seg_mask, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)  # cv2.CHAIN_APPROX_NONE)
+
+    print("contours:", contours)
+    print("hierarchy:", hierarchy)
+
+    #for elem in hierarchy:
+    #    print(elem)
+
+    #contours = np.asarray(contours)
+
+    #print("contours shape:", contours.shape)
+
+    #by = contours[:, 1]
+    #bx = contours[:, 0]
+
+    #unique = np.bincount(labels)
+    #uniques = np.unique(labels)
+
+    #for unique in uniques:
+    #    if unique == 0:
+    #        continue
+
+    #by, bx = htk_seg.label.trace_object_boundaries(
+    #    im_seg_mask, trace_all=True, 
+    #)
     #by *= 4
     #bx *= 4
-    
-    print("by,bx:", by, " | ", bx)
 
-    nuclei_annot_list = []
+    object_annot_list = []
 
-    for i in range(len(bx)):
+    print("number of objects (len(contours)):", len(contours))
+
+    #for i in range(len(bx)):
+    for i in range(len(contours)):
         # get boundary points and convert to base pixel space
-        num_points = len(bx[i])
+        #num_points = len(bx[i])
+        curr_contour = np.asarray(contours[i])
+        num_points = len(curr_contour)
+
+        print("num_points:", num_points, curr_contour)
+        print("shape curr contour:", curr_contour.shape)
+
+        # remove redundant axis in the middle
+        curr_contour = np.squeeze(curr_contour, axis=1)
+
+        print("UPDATED shape curr contour:", curr_contour.shape)
 
         if num_points < 3:
             continue
 
         cur_points = np.zeros((num_points, 3))
-        cur_points[:, 0] = np.round(gx + bx[i] * wfrac, 2) * 4
-        cur_points[:, 1] = np.round(gy + by[i] * hfrac, 2) * 4
+        cur_points[:, 0] = np.round(gx + curr_contour[:, 1] * wfrac, 2) * 4
+        cur_points[:, 1] = np.round(gy + curr_contour[:, 0] * hfrac, 2) * 4
+        print("cur_points:", cur_points)
         cur_points = cur_points.tolist()
 
         # create annotation json
@@ -79,14 +147,16 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
             "lineColor": "rgb(0,255,0)"
         }
 
-        nuclei_annot_list.append(cur_annot)
+        object_annot_list.append(cur_annot)
+    
+    print("final output from tile (number of unique objects - nested list):", len(object_annot_list))
 
-    return nuclei_annot_list
+    return object_annot_list
 
 
 def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
+    annot_list = []
     try:
-        print("\nprocessing tile ...")
         # get slide tile source
         ts = large_image.getTileSource(slide_path)
 
@@ -107,18 +177,21 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         #    im_seg_mask = htk_seg_label.delete_border(im_seg_mask)
 
         # generate annotations
-        annot_list = []
-        
         flag_object_found = np.any(im_seg_mask)
 
-        print("count nonzero seg mask tile:", np.count_nonzero(im_seg_mask))
+        counts = np.count_nonzero(im_seg_mask)
+        print("count nonzero seg mask tile:", counts)
+        if counts == 0:
+            return annot_list
+        elif counts > 50000:
+            return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
 
         if flag_object_found:
             annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
 
     except Exception as e:
         print(e)
-        return []
+        return annot_list
 
     return annot_list
 
@@ -220,7 +293,7 @@ def main(args):
         iter += 1
         print("\nIter:", iter)
 
-        with timeout(seconds=1):
+        with timeout(seconds=3):
             try:
                 tile = next(generator)
 
@@ -234,27 +307,32 @@ def main(args):
                 # detect nuclei
                 #curr_annot_list = get_annot_from_tiff_tile(
                 #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
-                #curr_annot_list = get_annot_from_tiff_tile(
-                curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
+                curr_annot_list = get_annot_from_tiff_tile(
                     pred_output_path,
                     tile_position,
                     args,
                     it_kwargs
-                ).compute()
+                )
                 
-                # curr_annot_list.compute()
+                #.compute()
 
                 print(curr_annot_list)
 
                 # append result to list
                 #tile_list.append(curr_annot_list)
-                annot_list.extend(curr_annot_list)
+                #annot_list.extend(curr_annot_list)
+                annot_list.append(curr_annot_list)
+
+                print("Finished before timeout!")
 
             except StopIteration:
                 print("\n Iterator is empty. Stopped iterator ...")
                 break
             except TimeoutError:
                 print("Operation timed out...")
+                pass
+            except HTTPError as e:
+                print(e)
                 pass
             except Exception:
                 print("\n Something wrong with tile ...")
@@ -265,14 +343,14 @@ def main(args):
         #if iter == 50:
         #    break
     
-    print("Done iterating tiles. Total number of tiles were:", len(annot_list))
+    print("\n\n\n\n\n ... Done iterating tiles. Total number of tiles were:", len(annot_list))
     
     from dask.diagnostics import ProgressBar
 
     #with ProgressBar():
     #tile_list = dask.delayed(tile_list).compute()
 
-    #annot_list = [anot for anot_list in annot_list for anot in anot_list]
+    annot_list = [anot for anot_list in annot_list for anot in anot_list]
 
     nuclei_detection_time = time.time() - start_time
 
