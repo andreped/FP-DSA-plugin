@@ -123,8 +123,10 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         #print("count nonzero seg mask tile:", counts)
         if counts == 0:
             return annot_list
-        #elif counts > 50000:
-        #    return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
+            
+        elif counts > 50000:
+            return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
+
         if flag_object_found:
             annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
 
@@ -317,7 +319,9 @@ def main(args):
 
     total_time_taken = time.time() - total_start_time
 
-    print('Total analysis time = {}'.format(
+    print("\n Does JSON file exist:", os.path.exists(args.outputNucleiAnnotationFile))
+
+    print('\n Total analysis time = {}'.format(
         cli_utils.disp_time_hms(total_time_taken)))
 
 
