@@ -123,9 +123,9 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         #print("count nonzero seg mask tile:", counts)
         if counts == 0:
             return annot_list
-            
-        elif counts > 50000:
-            return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
+
+        #elif counts > 50000:
+        #    return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
 
         if flag_object_found:
             annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
@@ -203,9 +203,6 @@ def main(args):
 
     pred_output_path = fast_output_dir.name + ".tiff"
 
-    # when prediction file has been converted to an annotation file, the temporary dir can be closed (and deleted)
-    #fast_output_dir.cleanup()
-
     # convert pyramidal TIFF output from pyFAST to JSON annotation file (*.anot)
     # iterate over annotation image in tiled fashion, get unique elements, and save coordinates from each in JSON file
 
@@ -262,9 +259,19 @@ def main(args):
                 print("objects found in tile:", len(curr_annot_list))
 
                 # append result to list
-                #tile_list.append(curr_annot_list)
-                #annot_list.extend(curr_annot_list)
                 annot_list.append(curr_annot_list)
+
+                # append to JSON for each tile (to avoid memory leakage for millions of objects)
+                #annot_fname = os.path.splitext(os.path.basename(args.outputNucleiAnnotationFile))[0]
+
+                #annotation = {
+                #    "name": annot_fname + '-nuclei-' + str(iter) + "-" + args.nuclei_annotation_format,
+                #    "elements": curr_annot_list
+                #}
+
+                #with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
+                #    json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
+
 
                 print("Finished before timeout!")
 
@@ -288,26 +295,27 @@ def main(args):
     
     print("\n\n\n\n\n ... Done iterating tiles. Total number of tiles were:", len(annot_list))
     
-    from dask.diagnostics import ProgressBar
+    #from dask.diagnostics import ProgressBar
 
     #with ProgressBar():
     #tile_list = dask.delayed(tile_list).compute()
 
+    print("\n flatten gigantic list ... ")
     annot_list = [anot for anot_list in annot_list for anot in anot_list]
 
-    nuclei_detection_time = time.time() - start_time
+    print("\n Done flattening... Attempts to write large array to JSON file ...")
 
-    print('Number of nuclei = {}'.format(len(annot_list)))
+    #nuclei_detection_time = time.time() - start_time
 
-    print('Nuclei detection time = {}'.format(
-        cli_utils.disp_time_hms(nuclei_detection_time)))
+    #print('Number of nuclei = {}'.format(len(annot_list)))
 
-    print('\n>> Writing annotation file ...\n')
+    #print('Nuclei detection time = {}'.format(cli_utils.disp_time_hms(nuclei_detection_time)))
 
-    print('\n outputNucleiAnnotationFile:', args.outputNucleiAnnotationFile)
+    #print('\n>> Writing annotation file ...\n')
 
-    annot_fname = os.path.splitext(
-        os.path.basename(args.outputNucleiAnnotationFile))[0]
+    #print('\n outputNucleiAnnotationFile:', args.outputNucleiAnnotationFile)
+
+    annot_fname = os.path.splitext(os.path.basename(args.outputNucleiAnnotationFile))[0]
 
     annotation = {
         "name": annot_fname + '-nuclei-' + args.nuclei_annotation_format,
@@ -317,9 +325,13 @@ def main(args):
     with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
         json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
 
+
     total_time_taken = time.time() - total_start_time
 
     print("\n Does JSON file exist:", os.path.exists(args.outputNucleiAnnotationFile))
+
+    # when analysis is over, the temporary dir can be closed (and deleted)
+    fast_output_dir.cleanup()
 
     print('\n Total analysis time = {}'.format(
         cli_utils.disp_time_hms(total_time_taken)))
