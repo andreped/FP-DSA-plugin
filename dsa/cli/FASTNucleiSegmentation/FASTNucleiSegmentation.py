@@ -11,29 +11,35 @@ from tqdm import tqdm
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
 
+from pathlib import Path
 import cv2
 from urllib.error import HTTPError
 import signal
+import subprocess as sp
 
 
 logging.basicConfig(level=logging.CRITICAL)
 
 
-class timeout:
+# @TODO: Move this to a utils
+class Timeout:
+    
     def __init__(self, seconds=1, error_message='Timeout'):
         self.seconds = seconds
         self.error_message = error_message
+
     def handle_timeout(self, signum, frame):
         raise TimeoutError(self.error_message)
+
     def __enter__(self):
         signal.signal(signal.SIGALRM, self.handle_timeout)
         signal.alarm(self.seconds)
+
     def __exit__(self, type, value, traceback):
         signal.alarm(0)
 
 
 def create_tile_boundary_annotations(im_seg_mask, tile_info):
-
     gx = tile_info['gx']
     gy = tile_info['gy']
     wfrac = tile_info['gwidth'] / np.double(tile_info['width'])
@@ -45,21 +51,14 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
     contours, hierarchy = cv2.findContours(image=im_seg_mask, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)  # cv2.CHAIN_APPROX_NONE)
 
     object_annot_list = []
-
-    #print("number of objects (len(contours)):", len(contours))
-
-    #for i in range(len(bx)):
     for i in range(len(contours)):
+
         # get boundary points and convert to base pixel space
         curr_contour = np.asarray(contours[i])
         num_points = len(curr_contour)
 
-        #print("shape curr contour:", curr_contour.shape)
-
         # remove redundant axis in the middle
         curr_contour = np.squeeze(curr_contour, axis=1)
-
-        #print("UPDATED shape curr contour:", curr_contour.shape)
 
         if num_points < 3:
             continue
@@ -79,8 +78,6 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
         }
 
         object_annot_list.append(cur_annot)
-    
-    #print("final output from tile (number of unique objects - nested list):", len(object_annot_list))
 
     return object_annot_list
 
@@ -106,12 +103,7 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         # generate annotations
         flag_object_found = np.any(im_seg_mask)
 
-        counts = np.count_nonzero(im_seg_mask)
-        #print("count nonzero seg mask tile:", counts)
-        if counts == 0:
-            return annot_list
-
-        #elif counts > 50000:  # uncomment to avoid memory leak - however then dense nuclei regions will not be segmented/annotated/drawn
+        # if counts > 50000:  # uncomment to avoid memory leak - however then dense nuclei regions will not be segmented/annotated/drawn
         #    return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
 
         if flag_object_found:
@@ -126,16 +118,11 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
 
 def main(args):
     import dask
-
-    print("\n>> trying to import FAST...\n")
-    import fast  # <- @TODO: Does this work within the plugin? Will likely fail
-
-    print("\n>> Sucessfully imported FAST ...\n")
+    import fast  # needs to be imported here to not break Dockerfile test
 
     total_start_time = time.time()
 
     print('\n>> CLI Parameters ...\n')
-
     print(args)
 
     if not os.path.isfile(args.inputImageFile):
@@ -155,43 +142,30 @@ def main(args):
     else:
         process_whole_image = False
 
-    #
-    # Initiate Dask client
-    #
-    print('\n>> Creating Dask client ...\n')
+    print('\n>> Creating Dask client ...')
 
     start_time = time.time()
-
     c = cli_utils.create_dask_client(args)
-
     print(c)
 
     dask_setup_time = time.time() - start_time
-    print('Dask setup time = {}'.format(
-        cli_utils.disp_time_hms(dask_setup_time)))
+    print('Dask setup time = {}'.format(cli_utils.disp_time_hms(dask_setup_time)))
 
     # create temporary directory to save result
     fast_output_dir = tempfile.TemporaryDirectory()
     print("\nTemporary directory to save FPL result:", fast_output_dir.name)
 
     # get current home directory and get path to FAST DataHub
-    from pathlib import Path
-
     home = str(Path.home())
     datahub_dir = home + "/FAST/datahub/"
 
-    # run nuclei segmentation FPL
-    import subprocess as sp
-
+    # run nuclei segmentation FPL in a subprocess
     sp.check_call([
         "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/nuclei_segmentation.fpl",
         "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "0"
     ])
 
     pred_output_path = fast_output_dir.name + ".tiff"
-
-    # convert pyramidal TIFF output from pyFAST to JSON annotation file (*.anot)
-    # iterate over annotation image in tiled fashion, get unique elements, and save coordinates from each in JSON file
 
     print('\n>> Converting Pyramidal TIFF annotations to JSON ...\n')
 
@@ -203,6 +177,10 @@ def main(args):
         'scale': {'magnification': args.analysis_mag},  # args.analysis_mag},
     }
 
+    # initialize JSON file with [] to support multiple annotations
+    with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
+        json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
+
     start_time = time.time()
     annot_list = []
     generator = ts.tileIterator(**it_kwargs)
@@ -210,18 +188,14 @@ def main(args):
     iter = 0
     while True:
         iter += 1
-        print("\nIter:", iter)
+        print("\n>> Iter:", iter)
 
-        with timeout(seconds=3):
+        with Timeout(seconds=3):
             try:
                 tile = next(generator)
                 tile_position = tile['tile_position']['position']
 
-                #if tile_fgnd_frac_list[tile_position] <= args.min_fgnd_frac:
-                #    continue 
-
                 # detect nuclei
-                #curr_annot_list = get_annot_from_tiff_tile(
                 #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
                 curr_annot_list = get_annot_from_tiff_tile(
                     pred_output_path,
@@ -229,90 +203,47 @@ def main(args):
                     args,
                     it_kwargs
                 )
-                
                 #.compute()
 
-                print("objects found in tile:", len(curr_annot_list))
+                print("\n>> Objects found in tile:", len(curr_annot_list))
 
                 # append result to list
-                annot_list.append(curr_annot_list)
-
-                # @TODO: Should write for every single tile, instead of storing all annotations in a large list
-
-                # append to JSON for each tile (to avoid memory leakage for millions of objects)
-                #annot_fname = os.path.splitext(os.path.basename(args.outputNucleiAnnotationFile))[0]
-
-                #annotation = {
-                #    "name": annot_fname + '-nuclei-' + str(iter) + "-" + args.nuclei_annotation_format,
-                #    "elements": curr_annot_list
-                #}
-
-                #with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
-                #    json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
-
-
-                print("Finished before timeout!")
+                annot_list.extend(curr_annot_list)
 
             except StopIteration:
-                print("\n Iterator is empty. Stopped iterator ...")
+                print("\n>> Iterator is empty. Stopped iterator ...")
                 break
             except TimeoutError:
-                print("Operation timed out...")
+                print("\n>> Operation timed out ...")
                 pass
             except HTTPError as e:
                 print(e)
                 pass
             except Exception:
-                print("\n Something wrong with tile ...")
+                print("\n>> Something wrong with tile ...")
                 pass
-
-        #iter += 1
-
-        #if iter == 50:
-        #    break
     
-    print("\n\n\n\n\n ... Done iterating tiles. Total number of tiles were:", len(annot_list))
-    
-    #from dask.diagnostics import ProgressBar
-
-    #with ProgressBar():
-    #tile_list = dask.delayed(tile_list).compute()
-
-    print("\n flatten gigantic list ... ")
-    annot_list = [anot for anot_list in annot_list for anot in anot_list]
-
-    print("\n Done flattening... Attempts to write large array to JSON file ...")
-
-    #nuclei_detection_time = time.time() - start_time
-
-    #print('Number of nuclei = {}'.format(len(annot_list)))
-
-    #print('Nuclei detection time = {}'.format(cli_utils.disp_time_hms(nuclei_detection_time)))
-
-    print('\n>> Writing annotation file ...\n')
-
-    print('\n outputNucleiAnnotationFile:', args.outputNucleiAnnotationFile)
+    print("\n>> Done iterating tiles. Total number of tiles were:", len(annot_list))
+    print("\n>> Writing annotation file ...")
 
     annot_fname = os.path.splitext(os.path.basename(args.outputNucleiAnnotationFile))[0]
-
     annotation = {
         "name": annot_fname + '-nuclei-' + args.nuclei_annotation_format,
         "elements": annot_list
     }
+    del annot_list
 
     with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
         json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
 
-
     total_time_taken = time.time() - total_start_time
 
-    print("\n Does JSON file exist:", os.path.exists(args.outputNucleiAnnotationFile))
+    print("\n>> Does JSON file exist:", os.path.exists(args.outputNucleiAnnotationFile))
 
     # when analysis is over, the temporary dir can be closed (and deleted)
     fast_output_dir.cleanup()
 
-    print('\n Total analysis time = {}'.format(
-        cli_utils.disp_time_hms(total_time_taken)))
+    print('\n Total analysis time = {}'.format(cli_utils.disp_time_hms(total_time_taken)))
 
 
 if __name__ == "__main__":
