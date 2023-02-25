@@ -51,91 +51,31 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
     # make binary image (if not already)
     im_seg_mask = (im_seg_mask > 0).astype("uint8")
     
-    #edges = cv2.Canny(im_seg_mask, )
-
-    """
-
-    bx = []
-    by = []
-    
-    labels = skimage.measure.label(im_seg_mask).astype(int)
-
-    for unique in np.unique(labels)[1:]:
-        tmp = np.zeros_like(im_seg_mask)
-        tmp[labels == unique] = 1
-
-        # find all boundaries of binary image
-        distance = scipy.ndimage.distance_transform_edt(tmp)
-        distance[distance != 1] = 0
-        coords = np.where(distance == 1)
-
-        by.append(coords[0])
-        bx.append(coords[1])
-    
-    print("done processing uniques!")
-
-    print("number of unique objects:", len(bx))
-
-    # assumes all objects are the same object within a patch
-    #by = [coords[0]]
-    #bx = [coords[1]]
-
-    """
-
     contours, hierarchy = cv2.findContours(image=im_seg_mask, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE)  # cv2.CHAIN_APPROX_NONE)
-
-    print("contours:", contours)
-    print("hierarchy:", hierarchy)
-
-    #for elem in hierarchy:
-    #    print(elem)
-
-    #contours = np.asarray(contours)
-
-    #print("contours shape:", contours.shape)
-
-    #by = contours[:, 1]
-    #bx = contours[:, 0]
-
-    #unique = np.bincount(labels)
-    #uniques = np.unique(labels)
-
-    #for unique in uniques:
-    #    if unique == 0:
-    #        continue
-
-    #by, bx = htk_seg.label.trace_object_boundaries(
-    #    im_seg_mask, trace_all=True, 
-    #)
-    #by *= 4
-    #bx *= 4
 
     object_annot_list = []
 
-    print("number of objects (len(contours)):", len(contours))
+    #print("number of objects (len(contours)):", len(contours))
 
     #for i in range(len(bx)):
     for i in range(len(contours)):
         # get boundary points and convert to base pixel space
-        #num_points = len(bx[i])
         curr_contour = np.asarray(contours[i])
         num_points = len(curr_contour)
 
-        print("num_points:", num_points, curr_contour)
-        print("shape curr contour:", curr_contour.shape)
+        #print("shape curr contour:", curr_contour.shape)
 
         # remove redundant axis in the middle
         curr_contour = np.squeeze(curr_contour, axis=1)
 
-        print("UPDATED shape curr contour:", curr_contour.shape)
+        #print("UPDATED shape curr contour:", curr_contour.shape)
 
         if num_points < 3:
             continue
 
         cur_points = np.zeros((num_points, 3))
-        cur_points[:, 0] = np.round(gx + curr_contour[:, 1] * wfrac, 2) * 4
-        cur_points[:, 1] = np.round(gy + curr_contour[:, 0] * hfrac, 2) * 4
-        print("cur_points:", cur_points)
+        cur_points[:, 0] = np.round(gx + curr_contour[:, 0] * wfrac, 2) * 4
+        cur_points[:, 1] = np.round(gy + curr_contour[:, 1] * hfrac, 2) * 4
         cur_points = cur_points.tolist()
 
         # create annotation json
@@ -149,7 +89,7 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
 
         object_annot_list.append(cur_annot)
     
-    print("final output from tile (number of unique objects - nested list):", len(object_annot_list))
+    #print("final output from tile (number of unique objects - nested list):", len(object_annot_list))
 
     return object_annot_list
 
@@ -180,12 +120,11 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         flag_object_found = np.any(im_seg_mask)
 
         counts = np.count_nonzero(im_seg_mask)
-        print("count nonzero seg mask tile:", counts)
+        #print("count nonzero seg mask tile:", counts)
         if counts == 0:
             return annot_list
-        elif counts > 50000:
-            return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
-
+        #elif counts > 50000:
+        #    return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
         if flag_object_found:
             annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
 
@@ -316,7 +255,9 @@ def main(args):
                 
                 #.compute()
 
-                print(curr_annot_list)
+                # print(curr_annot_list)
+
+                print("objects found in tile:", len(curr_annot_list))
 
                 # append result to list
                 #tile_list.append(curr_annot_list)
