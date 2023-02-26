@@ -39,7 +39,7 @@ class Timeout:
         signal.alarm(0)
 
 
-def create_tile_boundary_annotations(im_seg_mask, tile_info):
+def create_tile_boundary_annotations(im_seg_mask, tile_info, magn_frac=4):
     gx = tile_info['gx']
     gy = tile_info['gy']
     wfrac = tile_info['gwidth'] / np.double(tile_info['width'])
@@ -62,10 +62,11 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
 
         if num_points < 3:
             continue
-
+        
+        # need to scale all coordinates to match full resolution
         cur_points = np.zeros((num_points, 3))
-        cur_points[:, 0] = np.round(gx + curr_contour[:, 0] * wfrac, 2) * 4
-        cur_points[:, 1] = np.round(gy + curr_contour[:, 1] * hfrac, 2) * 4
+        cur_points[:, 0] = np.round(gx + curr_contour[:, 0] * wfrac, 2) * magn_frac
+        cur_points[:, 1] = np.round(gy + curr_contour[:, 1] * hfrac, 2) * magn_frac
         cur_points = cur_points.tolist()
 
         # create annotation json
@@ -82,7 +83,7 @@ def create_tile_boundary_annotations(im_seg_mask, tile_info):
     return object_annot_list
 
 
-def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
+def get_annot_from_tiff_tile(slide_path, tile_position, magn_frac, args, it_kwargs):
     annot_list = []
     try:
         # get slide tile source
@@ -94,11 +95,8 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
             format=large_image.tilesource.TILE_FORMAT_NUMPY,
             **it_kwargs)
 
-        # get tile image
-        im_tile = tile_info['tile'][:, :, :3]
-
-        # make segmentation image
-        im_seg_mask = im_tile[:, :, 0]
+        # get tile uint image (assumed it is a segmentation image)
+        im_seg_mask = tile_info['tile'][:, :, 0]  # :3
 
         # generate annotations
         flag_object_found = np.any(im_seg_mask)
@@ -107,7 +105,8 @@ def get_annot_from_tiff_tile(slide_path, tile_position, args, it_kwargs):
         #    return annot_list  # for now, skip if annotation structure is TOO large (mongodb limitations...)
 
         if flag_object_found:
-            annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info)
+            # @TODO: Should automatically calculate magn_frac based on WSI magnification and which level FAST has run inference on
+            annot_list = create_tile_boundary_annotations(im_seg_mask, tile_info, magn_frac)
         
     except Exception as e:
         print(e)
@@ -128,19 +127,13 @@ def main(args):
     if not os.path.isfile(args.inputImageFile):
         raise OSError('Input image file does not exist.')
 
-    if len(args.reference_mu_lab) != 3:
-        raise ValueError('Reference Mean LAB should be a 3 element vector.')
-
-    if len(args.reference_std_lab) != 3:
-        raise ValueError('Reference Stddev LAB should be a 3 element vector.')
-
     if len(args.analysis_roi) != 4:
         raise ValueError('Analysis ROI must be a vector of 4 elements.')
-
+    
     if np.all(np.array(args.analysis_roi) == -1):
-        process_whole_image = True
+        process_roi = False
     else:
-        process_whole_image = False
+        process_roi = True
 
     print('\n>> Creating Dask client ...')
 
@@ -174,12 +167,20 @@ def main(args):
 
     it_kwargs = {
         'tile_size': {'width': args.analysis_tile_size},
-        'scale': {'magnification': args.analysis_mag},  # args.analysis_mag},
+        'scale': {'magnification': args.analysis_mag},
     }
 
-    # initialize JSON file with [] to support multiple annotations
-    with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
-        json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
+    # whether to only convert annotations within ROI (FAST will still run inference on entire WSI)
+    # @TODO: Right now we scale the region to work with FAST TIFF segmentation WSIs using a hardcoded magn_frac
+    magn_frac = int(40 / 10)
+    if process_roi:
+        it_kwargs['region'] = {
+            'left': int(args.analysis_roi[0] / magn_frac),
+            'top': int(args.analysis_roi[1] / magn_frac),
+            'width': int(args.analysis_roi[2] / magn_frac),
+            'height': int(args.analysis_roi[3] / magn_frac),
+            'units': 'base_pixels'
+        }
 
     start_time = time.time()
     annot_list = []
@@ -200,6 +201,7 @@ def main(args):
                 curr_annot_list = get_annot_from_tiff_tile(
                     pred_output_path,
                     tile_position,
+                    magn_frac,
                     args,
                     it_kwargs
                 )
@@ -231,7 +233,6 @@ def main(args):
         "name": annot_fname + '-nuclei-' + args.nuclei_annotation_format,
         "elements": annot_list
     }
-    del annot_list
 
     with open(args.outputNucleiAnnotationFile, 'w') as annotation_file:
         json.dump(annotation, annotation_file, separators=(',', ':'), sort_keys=False)
