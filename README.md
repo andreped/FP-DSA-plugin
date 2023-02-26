@@ -4,6 +4,7 @@
 
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
 
+<img src="assets/snapshot_nuclei.png" style="background-color:black">
 
 ## Requirements
 
