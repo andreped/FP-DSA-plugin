@@ -6,6 +6,7 @@ Click `watch` in the top right if this project interests you and want to be upda
 
 <img src="assets/snapshot_nuclei.png" style="background-color:black">
 
+
 ## Requirements
 
 DSA needs to be installed. Follow the instructions [here](https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/dsa) on how to do so.
@@ -26,16 +27,10 @@ Clone the repository:
 git clone https://github.com/andreped/FP-dsa-plugin.git
 ```
 
-Build the docker image for the core fastpathology:
-```
-cd dsa/fastpathology/
-docker build -t fastpathology .
-```
-
 Build the docker image for the plugin:
 ```
-cd ../
-docker build -t fastpathology-dsa-plugin .
+cd dsa/
+docker build -t fastpathology .
 ```
 
 To add the plugin to DSA, choose `Upload new Task` under Slicer CLI Web Tasks in the DSA web UI. The plugin can then be used from the Analysis Page.
@@ -43,9 +38,9 @@ To add the plugin to DSA, choose `Upload new Task` under Slicer CLI Web Tasks in
 
 ## Acknowledgements
 
-The core was built based on [pyFAST](https://github.com/smistad/FAST), and the plugin was inspired by the plugins made for [MONAILabel](https://github.com/Project-MONAI/MONAILabel/tree/main/plugins/dsa) and [HistomicsTK](https://github.com/DigitalSlideArchive/HistomicsTK/tree/master/histomicstk/cli).
+The core was built based on [pyFAST](https://github.com/smistad/FAST), and the plugin was inspired by the plugins made for [MONAILabel](https://github.com/Project-MONAI/MONAILabel/tree/main/plugins/dsa) and [HistomicsTK](https://github.com/DigitalSlideArchive/HistomicsTK/tree/master/histomicstk/cli). Conversion of pyFAST's pyramidal TIFF annotations to HistomicsTK's JSON annotations was enabled using [OpenCV](https://github.com/opencv/opencv).
 
-The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSlideArchive/digital_slide_archive) which have developed an open and extremely robust and user-friendly archive web solution for large microscopy images. Building our methods on top of DSA was done with ease and credit to the developers such as [manthey](https://github.com/manthey) for addressing any issue and concerns we had at impressive speed!
+The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSlideArchive/digital_slide_archive) which have developed an open and extremely robust and user-friendly archive web solution for large microscopy images. Building our methods on top of DSA was done with ease and credit to the developers such as [manthey](https://github.com/manthey) and [dgutman](https://github.com/dgutman) for addressing any issue and concerns we had at impressive speed!
 
 
 ## License
