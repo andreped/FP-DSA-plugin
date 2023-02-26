@@ -40,7 +40,6 @@ RUN apt-get install -y \
     wget \
     vim \
     git \
-    # can speed up large_image caching \
     memcached
 
 # install pyFAST dependencies
@@ -51,13 +50,9 @@ RUN apt-get install -y libglib2.0-0 libsm6 libxrender1 libxext6
 
 # install histomicstk necessary for communicating with HistomicsUI
 RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
-RUN pip3 install opencv-python scikit-image tqdm scipy
 
-# test fastpathology entrypoint
-#RUN pip3 list && ls -la && fastpathology && python3 -m fastpathology -h
-
-# download test sample and place it in /pipelines/
-# RUN cd /opt/pipelines/ && wget https://folk.ntnu.no/andpeder/FastPathology/test_data/WSI/A05.svs
+# install additional dependencies useful for handling annotations and progress
+RUN pip3 install opencv-python tqdm
 
 # set working directory and setup environment
 ADD . /opt/fastpathology/dsa
@@ -65,21 +60,17 @@ WORKDIR /opt/fastpathology/dsa/cli
 ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 
 # copy fastpathology into working directory
-#COPY fastpathology/fastpathology $WORKDIR
 COPY fastpathology .
-
-RUN ls -la && ls fastpathology/pipelines && ls /opt/fastpathology/dsa/cli/fastpathology/pipelines && pwd
 
 # install fastpathology python package
 RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
   && cd FP-dsa-plugin/dsa/fastpathology/ \
   && pip install -e .
-  #&& python3 setup.py install
 
 # test entrypoint
 RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
-RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help  # <- cannot run this inside here as there is no X11 (!)
+RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help
 
 # define docker entrypoint
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
