@@ -126,7 +126,11 @@ def main(args):
 
     total_time_taken = time.time() - total_start_time
 
-    print("\n>> Does JSON file exist:", os.path.exists(args.outputNucleiAnnotationFile))
+    file_exist = os.path.exists(args.outputNucleiAnnotationFile)
+    print("\n>> Does JSON file exist:", file_exist)
+
+    if file_exist:
+        print("\n>> JSON file size on disk [MB]:", os.path.getsize(args.outputNucleiAnnotationFile) / (1024.0 ** 2))
 
     # when analysis is over, the temporary dir can be closed (and deleted)
     fast_output_dir.cleanup()
