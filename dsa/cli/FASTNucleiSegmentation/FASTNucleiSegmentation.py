@@ -78,7 +78,7 @@ def main(args):
     iter = 0
     while True:
         iter += 1
-        print("\n>> Iter:", iter)
+        print("\n>> Tile:", iter)
 
         with Timeout(seconds=3):
             try:
