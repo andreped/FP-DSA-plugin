@@ -1,5 +1,3 @@
-import fast
-import os
 from .utils import enable_fast_verbosity, download_models, run_pipeline
 from argparse import ArgumentParser
 
