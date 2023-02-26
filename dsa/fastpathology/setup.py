@@ -16,9 +16,12 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/andreped/FP-dsa-plugin/tree/main/dsa/fastpathology",
     include_package_data=True,
-    #packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(),
     install_requires=[
         "pyFAST",
+        "opencv-python",
+        "numpy",
+        "large-image"
     ],
     entry_points={
         'console_scripts': [
