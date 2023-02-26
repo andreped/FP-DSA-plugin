@@ -6,7 +6,6 @@ import time
 import large_image
 import numpy as np
 import tempfile
-from tqdm import tqdm
 
 from histomicstk.cli import utils as cli_utils
 from histomicstk.cli.utils import CLIArgumentParser
@@ -34,14 +33,10 @@ def main(args):
     if len(args.analysis_roi) != 4:
         raise ValueError('Analysis ROI must be a vector of 4 elements.')
     
-    if np.all(np.array(args.analysis_roi) == -1):
-        process_roi = False
-    else:
-        process_roi = True
+    process_roi = False if np.all(np.array(args.analysis_roi) == -1) else True
 
     # create temporary directory to save result
     fast_output_dir = tempfile.TemporaryDirectory()
-    print("\nTemporary directory to save FPL result:", fast_output_dir.name)
 
     # get current home directory and get path to FAST DataHub
     home = str(Path.home())
