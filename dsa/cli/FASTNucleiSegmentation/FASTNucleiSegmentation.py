@@ -22,8 +22,6 @@ logging.basicConfig(level=logging.CRITICAL)
 
 
 def main(args):
-    import dask
-    import fast  # needs to be imported here to not break Dockerfile test
 
     total_start_time = time.time()
 
@@ -40,15 +38,6 @@ def main(args):
         process_roi = False
     else:
         process_roi = True
-
-    print('\n>> Creating Dask client ...')
-
-    start_time = time.time()
-    c = cli_utils.create_dask_client(args)
-    print(c)
-
-    dask_setup_time = time.time() - start_time
-    print('Dask setup time = {}'.format(cli_utils.disp_time_hms(dask_setup_time)))
 
     # create temporary directory to save result
     fast_output_dir = tempfile.TemporaryDirectory()
@@ -88,7 +77,6 @@ def main(args):
             'units': 'base_pixels'
         }
 
-    start_time = time.time()
     annot_list = []
     generator = ts.tileIterator(**it_kwargs)
 
@@ -103,7 +91,6 @@ def main(args):
                 tile_position = tile['tile_position']['position']
 
                 # detect nuclei
-                #curr_annot_list = dask.delayed(get_annot_from_tiff_tile)(
                 curr_annot_list = get_annot_from_tiff_tile(
                     pred_output_path,
                     tile_position,
@@ -111,7 +98,6 @@ def main(args):
                     args,
                     it_kwargs
                 )
-                #.compute()
 
                 print("\n>> Objects found in tile:", len(curr_annot_list))
 
