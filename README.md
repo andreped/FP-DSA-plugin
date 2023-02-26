@@ -1,4 +1,4 @@
-# DSA FAST-Pathology extension
+# FAST-Pathology Digital Slide Archive (DSA) extension
 
 **DISCLAIMER:** This is a work in progress. When I have the plugin properly working and stable, I will make a public docker image, and make a release here.
 
