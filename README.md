@@ -10,6 +10,16 @@ Click `watch` in the top right if this project interests you and want to be upda
   <img src="assets/snapshot_classification.png" width="45%" style="background-color:black">
 </p>
 
+## Features
+
+The software is still in continuous development, but some key features have been added such as:
+
+* Uses pyFAST backend to run FAST pipelines (FPLs)
+* Developed generic backend tool for running FPLs through the UI and convert predictions to the JSON format
+* Ability to run patch-wise classification and segmentation models
+* Render classification predictions as heatmaps and segmentation objects as boundaries
+* Store predictions in database, access, download, and modify these through the UI
+
 
 ## Requirements
 
