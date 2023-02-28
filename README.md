@@ -4,7 +4,11 @@
 
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
 
-<img src="assets/snapshot_nuclei.png" style="background-color:black">
+
+<p float="left">
+  <img src="assets/snapshot_nuclei.png" width="45%" style="background-color:black">
+  <img src="assets/snapshot_classification.png" width="45%" style="background-color:black">
+</p>
 
 
 ## Requirements

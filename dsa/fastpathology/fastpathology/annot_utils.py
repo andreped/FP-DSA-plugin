@@ -4,7 +4,6 @@ import cv2
 import large_image
 
 
-# @TODO: Move this to a utils
 class Timeout:
     
     def __init__(self, seconds=1, error_message='Timeout'):
@@ -96,4 +95,3 @@ def get_annot_from_tiff_tile(slide_path, tile_position, magn_frac, args, it_kwar
         return annot_list
 
     return annot_list
-
