@@ -96,3 +96,4 @@ def get_annot_from_tiff_tile(slide_path, tile_position, magn_frac, args, it_kwar
         return annot_list
 
     return annot_list
+

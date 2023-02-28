@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <category>FAST-Pathology</category>
+  <title>Classify BACH</title>
+  <description>Patch-wise classification of In-Situ, Normal, Benign, and Malign tissue in a whole slide image (WSI)</description>
+  <version>0.1.0</version>
+  <documentation-url>https://digitalslidearchive.github.io/HistomicsTK/</documentation-url>
+  <license>MIT</license>
+  <contributor>André Pedersen (SINTEF)</contributor>
+  <acknowledgements>This work is part of the AICAN and UNICAN projects.</acknowledgements>
+  <parameters>
+    <label>IO</label>
+    <description>Input/output parameters</description>
+    <image>
+      <name>inputImageFile</name>
+      <label>Input Image</label>
+      <description>Input image</description>
+      <channel>input</channel>
+      <index>0</index>
+    </image>
+    <region>
+      <name>analysis_roi</name>
+      <label>Analysis ROI</label>
+      <description>Region of interest within which the analysis should be done. Must be a four element vector in the format "left, top, width, height" in the space of the base layer. Default value of "-1, -1, -1, -1" indicates that the whole image should be processed.</description>
+      <longflag>analysis_roi</longflag>
+      <default>-1,-1,-1,-1</default>
+    </region>
+    <string-enumeration>
+      <name>nuclei_annotation_format</name>
+      <label>Nuclei annotation format</label>
+      <description>Format of the output nuclei annotations</description>
+      <longflag>nuclei_annotation_format</longflag>
+      <element>bbox</element>
+      <element>boundary</element>
+      <default>boundary</default>
+    </string-enumeration>
+    <file fileExtensions=".anot" reference="inputImageFile">
+      <name>outputNucleiAnnotationFile</name>
+      <label>Output Nuclei Annotation File</label>
+      <description>Output nuclei annotation file (*.anot)</description>
+      <channel>output</channel>
+      <index>1</index>
+    </file>
+  </parameters>
+  <parameters advanced="true">
+    <label>WSI Analysis</label>
+    <description>Whole-slide image analysis (WSI) parameters</description>
+    <double>
+      <name>analysis_tile_size</name>
+      <label>Analysis Tile Size</label>
+      <description>Tile size for blockwise analysis</description>
+      <longflag>analysis_tile_size</longflag>
+      <default>1024</default>
+    </double>
+    <double>
+      <name>analysis_mag</name>
+      <label>Analysis Magnification</label>
+      <description>The magnification at which the analysis should be performed.</description>
+      <longflag>analysis_mag</longflag>
+      <default>10</default>
+    </double>
+    <double>
+      <name>min_fgnd_frac</name>
+      <label>Minimum foreground fraction</label>
+      <description>The minimum amount of foreground that must be present in a tile for it to be analyzed</description>
+      <longflag>min_fgnd_frac</longflag>
+      <default>0.25</default>
+    </double>
+  </parameters>
+  <parameters advanced="true">
+    <label>Dask</label>
+    <description>Dask parameters</description>
+    <string>
+      <name>scheduler</name>
+      <label>Scheduler Address</label>
+      <description>Address of a dask scheduler in the format '127.0.0.1:8786'.  Not passing this parameter sets up a dask cluster on the local machine.  'multiprocessing' uses Python multiprocessing.  'multithreading' uses Python multiprocessing in threaded mode.</description>
+      <longflag>scheduler</longflag>
+      <default></default>
+    </string>
+    <integer>
+      <name>num_workers</name>
+      <label>Number of workers</label>
+      <description>Number of dask workers to start while setting up a local cluster internally. If a negative value is specified then the number of workers is set to number of cpu cores on the machine minus the number of workers specified.</description>
+      <longflag>num_workers</longflag>
+      <default>-1</default>
+    </integer>
+    <integer>
+      <name>num_threads_per_worker</name>
+      <label>Number of threads per worker</label>
+      <description>Number of threads to use per worker while setting up a local cluster internally. Must be a positive integer >= 1.</description>
+      <longflag>num_threads_per_worker</longflag>
+      <default>1</default>
+    </integer>
+  </parameters>
+</executable>

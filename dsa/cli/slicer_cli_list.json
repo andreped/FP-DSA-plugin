@@ -6,6 +6,9 @@
         "type": "python",
         "docker-params": {
             "ipc_mode": "host"
-          }
+        }
+    },
+    "FASTBachClassification": {
+        "type": "python"
     }
 }

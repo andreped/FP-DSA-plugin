@@ -52,7 +52,7 @@ RUN apt-get install -y libglib2.0-0 libsm6 libxrender1 libxext6
 RUN pip3 install histomicstk --find-links https://girder.github.io/large_image_wheels
 
 # install additional dependencies useful for handling annotations and progress
-RUN pip3 install opencv-python tqdm
+RUN pip3 install opencv-python tqdm h5py
 
 # set working directory and setup environment
 ADD . /opt/fastpathology/dsa
@@ -71,6 +71,7 @@ RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
 RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
 RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help
+RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTBachClassification --help
 
 # define docker entrypoint
 ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
