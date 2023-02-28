@@ -5,7 +5,7 @@
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
 
 
-<p float="left">
+<p style="text-align: center;">
   <img src="assets/snapshot_nuclei.png" width="45%" style="background-color:black">
   <img src="assets/snapshot_classification.png" width="45%" style="background-color:black">
 </p>
