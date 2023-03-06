@@ -10,6 +10,7 @@ Click `watch` in the top right if this project interests you and want to be upda
   <img src="assets/snapshot_classification.png" width="45%" style="background-color:black">
 </p>
 
+
 ## Features
 
 The software is still in continuous development, but some key features have been added such as:
@@ -61,4 +62,4 @@ The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSl
 
 The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main/LICENSE).
 
-Note that the different components used have their respective licenses. However, to the best of our knowledge, they are all dependencies used have permissive licenses with no real proprietary limitations.
+Note that the different components used have their respective licenses. However, to the best of our knowledge, all dependencies used have permissive licenses with no real proprietary limitations.
