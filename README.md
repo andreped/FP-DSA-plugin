@@ -1,4 +1,4 @@
-# FastPathology Digital Slide Archive FP-DSA extension
+# FastPathology Digital Slide Archive (FP-DSA) extension
 
 **DISCLAIMER:** This is a work in progress. When I have the plugin properly working and stable, I will make a public docker image, and make a release here.
 
@@ -11,7 +11,7 @@ Click `watch` in the top right if this project interests you and want to be upda
 </p>
 
 
-## Features
+## 🎊 Features
 
 The software is still in continuous development, but some key features have been added such as:
 
@@ -22,7 +22,7 @@ The software is still in continuous development, but some key features have been
 * Store predictions in database, access, download, and modify these through the UI
 
 
-## Requirements
+## 🐳 Requirements
 
 DSA needs to be installed. Follow the instructions [here](https://github.com/DigitalSlideArchive/digital_slide_archive/tree/master/devops/dsa) on how to do so.
 
@@ -35,7 +35,7 @@ sudo systemctl restart docker
 ```
 
 
-## Installation
+## 💻 Installation
 
 Clone the repository:
 ```
@@ -51,14 +51,14 @@ docker build -t fastpathology .
 To add the plugin to DSA, choose `Upload new Task` under Slicer CLI Web Tasks in the DSA web UI. The plugin can then be used from the Analysis Page.
 
 
-## Acknowledgements
+## 👏 Acknowledgements
 
 The core was built based on [pyFAST](https://github.com/smistad/FAST), and the plugin was inspired by the plugins made for [MONAILabel](https://github.com/Project-MONAI/MONAILabel/tree/main/plugins/dsa) and [HistomicsTK](https://github.com/DigitalSlideArchive/HistomicsTK/tree/master/histomicstk/cli). Conversion of pyFAST's pyramidal TIFF annotations to HistomicsTK's JSON annotations was enabled using [OpenCV](https://github.com/opencv/opencv).
 
 The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSlideArchive/digital_slide_archive) which have developed an open and extremely robust and user-friendly archive web solution for large microscopy images. Building our methods on top of DSA was done with ease and credit to the developers such as [manthey](https://github.com/manthey) and [dgutman](https://github.com/dgutman) for addressing any issue and concerns we had at impressive speed!
 
 
-## License
+## ✨ License
 
 The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main/LICENSE).
 
