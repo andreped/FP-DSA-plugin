@@ -67,7 +67,7 @@ The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main
 
 Note that the different components used have their respective licenses. However, to the best of our knowledge, all dependencies used have permissive licenses with no real proprietary limitations.
 
-## 🎊 Citation
+## 🔬 Citation
 
 If you found this project relevant for your research, consider citing it by:
 ```
