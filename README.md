@@ -1,5 +1,8 @@
 # FastPathology Digital Slide Archive (FP-DSA) extension
 
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/604341123.svg)](https://zenodo.org/badge/latestdoi/604341123)
+
 **DISCLAIMER:** This is a work in progress. When I have the plugin properly working and stable, I will make a public docker image, and make a release here.
 
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
@@ -63,3 +66,19 @@ The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSl
 The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main/LICENSE).
 
 Note that the different components used have their respective licenses. However, to the best of our knowledge, all dependencies used have permissive licenses with no real proprietary limitations.
+
+## Citation
+
+If you found this project relevant for your research, consider citing it by:
+```
+@software{pedersen2023fp_dsa_plugin,
+  author       = {André Pedersen},
+  title        = {andreped/FP-DSA-plugin: v0.0.1},
+  month        = jul,
+  year         = 2023,
+  publisher    = {Zenodo},
+  version      = {v0.0.1},
+  doi          = {10.5281/zenodo.8124068},
+  url          = {https://doi.org/10.5281/zenodo.8124068}
+}
+```
