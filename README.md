@@ -7,7 +7,6 @@
 
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
 
-
 <p style="text-align: center;">
   <img src="assets/snapshot_nuclei.png" width="45%" style="background-color:black">
   <img src="assets/snapshot_classification.png" width="45%" style="background-color:black">
@@ -16,7 +15,7 @@ Click `watch` in the top right if this project interests you and want to be upda
 
 ## 🎊 Features
 
-The software is still in continuous development, but some key features have been added such as:
+The software is still in development, but some key features have been added such as:
 
 * Uses pyFAST backend to run FAST pipelines (FPLs)
 * Developed generic backend tool for running FPLs through the UI and convert predictions to the JSON format
@@ -66,6 +65,7 @@ The plugin was made for the [Digital Slide Archive](https://github.com/DigitalSl
 The plugin has [MIT-License](https://github.com/andreped/FP-dsa-plugin/blob/main/LICENSE).
 
 Note that the different components used have their respective licenses. However, to the best of our knowledge, all dependencies used have permissive licenses with no real proprietary limitations.
+
 
 ## 🔬 Citation
 
