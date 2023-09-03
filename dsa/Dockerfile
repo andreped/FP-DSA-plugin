@@ -43,7 +43,7 @@ RUN apt-get install -y \
     memcached
 
 # install pyFAST dependencies
-RUN pip3 install --default-timeout=1000 pyfast==4.6.0
+RUN pip3 install --default-timeout=1000 pyfast==4.7.1
 
 # necessary for opencv in docker
 RUN apt-get install -y libglib2.0-0 libsm6 libxrender1 libxext6
