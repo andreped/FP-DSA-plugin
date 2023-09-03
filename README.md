@@ -5,6 +5,8 @@
 
 **DISCLAIMER:** This is a work in progress. When I have the plugin properly working and stable, I will make a public docker image, and make a release here.
 
+Note that this setup has been tested against Ubuntu 18.04 and 20.04. It should likely work on Windows 10, but on macOS there is a conflict between OpenGL/OpenCL resulting in a `RuntimeError: clGetPlatformIDs`.
+
 Click `watch` in the top right if this project interests you and want to be updated when it is ready to be tested.
 
 <p style="text-align: center;">
@@ -50,7 +52,7 @@ cd dsa/
 docker build -t fastpathology .
 ```
 
-To add the plugin to DSA, choose `Upload new Task` under `Slicer CLI Web Tasks` in the DSA web UI. The plugin can then be used from the Analysis Page.
+To add the plugin to DSA, choose `Upload new Task` under `Slicer CLI Web Tasks` in the DSA web UI, and write `fastpathology:latest` and click `Import image`. The plugin can then be used from the Analysis Page.
 
 
 ## 👏 Acknowledgements
