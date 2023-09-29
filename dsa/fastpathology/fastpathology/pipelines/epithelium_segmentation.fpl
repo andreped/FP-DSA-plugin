@@ -1,0 +1,41 @@
+PipelineName "Multiclass epithelium segmentation in breast cancer"
+PipelineDescription "Segmentation of epithelium cells in breast cancer."
+PipelineInputData WSI "Whole-slide image"
+PipelineOutputData segmentation stitcher 0
+Attribute classes "Background;invasive;benign;inSitu"
+
+### Processing chain
+ProcessObject importer WholeSlideImageImporter
+Attribute filename @@input@@
+
+ProcessObject tissueSeg TissueSegmentation
+Attribute threshold 70
+Input 0 importer 0
+
+ProcessObject patch PatchGenerator
+Attribute patch-size 1024 1024
+Attribute patch-magnification 10
+Attribute patch-overlap 0.30
+Attribute mask-threshold 0.02
+Input 0 WSI
+Input 1 tissueSeg 0
+
+ProcessObject network NeuralNetwork
+Attribute scale-factor 0.00392156862
+Attribute inference-engine OpenVINO
+Attribute model @@model@@"/epithelium-segmentation-model/high_res_epithelium_agunet.onnx"
+Input 0 patch 0
+
+ProcessObject converter TensorToSegmentation
+Attribute threshold 0.5
+Input 0 network 5
+
+ProcessObject stitcher PatchStitcher
+Input 0 converter 0
+
+ProcessObject finish RunUntilFinished
+Input 0 stitcher 0
+
+ProcessObject segExporter TIFFImagePyramidExporter
+Attribute filename @@output@@".tiff"
+Input 0 finish 0
