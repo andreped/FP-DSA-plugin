@@ -1,7 +1,7 @@
 # FastPathology Digital Slide Archive (FP-DSA) extension
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/604341123.svg)](https://zenodo.org/badge/latestdoi/604341123)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8124068.svg)](https://doi.org/10.5281/zenodo.8124068)
 
 **DISCLAIMER:** This is a work in progress. When I have the plugin properly working and stable, I will make a public docker image, and make a release here.
 
