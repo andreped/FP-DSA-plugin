@@ -2,6 +2,9 @@
     "NucleiSegmentation": {
         "type": "python"
     },
+    "BreastEpitheliumSegmentation": {
+        "type": "python"
+    },
     "FASTNucleiSegmentation": {
         "type": "python",
         "docker-params": {

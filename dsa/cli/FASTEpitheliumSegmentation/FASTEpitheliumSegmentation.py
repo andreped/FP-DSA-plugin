@@ -44,7 +44,7 @@ def main(args):
 
     # run epithelium segmentation FPL in a subprocess
     sp.check_call([
-        "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/epithelium_segmentation.fpl",
+        "fastpathology", "-f", "/opt/fastpathology/dsa/cli/fastpathology/pipelines/breast_epithelium_segmentation.fpl",
         "-i", args.inputImageFile, "-o", fast_output_dir.name, "-m", datahub_dir, "-v", "0"
     ])
 

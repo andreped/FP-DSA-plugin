@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <executable>
   <category>FAST-Pathology</category>
-  <title>Segment Epithelium</title>
-  <description>Segment epithelium in a whole slide image (WSI)</description>
+  <title>Segment Breast Epithelium</title>
+  <description>Segment breast epithelium in a whole slide image (WSI)</description>
   <version>0.1.0</version>
   <documentation-url>https://digitalslidearchive.github.io/HistomicsTK/</documentation-url>
   <license>MIT</license>
