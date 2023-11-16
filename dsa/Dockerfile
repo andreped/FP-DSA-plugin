@@ -62,8 +62,6 @@ ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 # copy fastpathology into working directory
 COPY fastpathology .
 
-RUN ls -la
-
 # install fastpathology python package
 RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
   && cd FP-dsa-plugin/dsa/fastpathology/ \
