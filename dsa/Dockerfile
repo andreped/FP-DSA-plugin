@@ -62,6 +62,8 @@ ENV PYTHONPATH=$PYTHONPATH:/opt/fastpathology/dsa
 # copy fastpathology into working directory
 COPY fastpathology .
 
+RUN ls -la
+
 # install fastpathology python package
 RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
   && cd FP-dsa-plugin/dsa/fastpathology/ \
@@ -70,7 +72,7 @@ RUN git clone https://github.com/andreped/FP-dsa-plugin.git \
 # test entrypoint
 RUN python3 -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python3 -m slicer_cli_web.cli_list_entrypoint NucleiSegmentation --help
-RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTBreastSegmentation --help
+RUN python3 -m slicer_cli_web.cli_list_entrypoint BreastEpitheliumSegmentation --help
 RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTNucleiSegmentation --help
 RUN python3 -m slicer_cli_web.cli_list_entrypoint FASTBachClassification --help
 
