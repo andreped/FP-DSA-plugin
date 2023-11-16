@@ -23,7 +23,7 @@ Input 1 tissueSeg 0
 ProcessObject network NeuralNetwork
 Attribute scale-factor 0.00392156862
 Attribute inference-engine OpenVINO
-Attribute model @@model@@"/epithelium-segmentation-model/high_res_epithelium_agunet.onnx"
+Attribute model @@model@@"/breast-epithelium-segmentation-model/model_breast_epithelium_segmentation.onnx"
 Input 0 patch 0
 
 ProcessObject converter TensorToSegmentation
